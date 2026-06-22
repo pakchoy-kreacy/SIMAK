@@ -1,6 +1,6 @@
-// ============================================================
+﻿// ============================================================
 // app/(parent)/dashboard/DashboardClient.tsx
-// Dashboard interaktif orang tua — redesign
+// Dashboard interaktif orang tua — redesign + dark mode
 // ============================================================
 
 'use client'
@@ -46,12 +46,12 @@ export function DashboardClient({
   const mutabaah = todayData ?? initialMutabaah
 
   return (
-    <div className="px-4 py-4 space-y-4 max-w-lg mx-auto">
+    <div className="px-4 py-4 space-y-4 max-w-lg mx-auto dark:bg-neutral-900 min-h-screen">
 
       {/* ========== IDENTITAS ANAK ========== */}
       <div className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl p-5 text-white animate-in">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+          <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0" aria-hidden="true">
             <span className="text-2xl">👦</span>
           </div>
           <div className="flex-1 min-w-0">
@@ -64,11 +64,8 @@ export function DashboardClient({
       </div>
 
       {/* ========== CARD: Mutabaah Hari Ini ========== */}
-      <section
-        className="card animate-in"
-        style={{ animationDelay: '0.05s' }}
-      >
-        <h3 className="font-bold text-neutral-800 mb-3">Mutabaah Hari Ini</h3>
+      <section className="card animate-in" style={{ animationDelay: '0.05s' }}>
+        <h3 className="font-bold text-neutral-800 dark:text-neutral-100 mb-3">Mutabaah Hari Ini</h3>
 
         {mutabaah.items.length === 0 ? (
           <EmptyMutabaah />
@@ -78,37 +75,30 @@ export function DashboardClient({
       </section>
 
       {/* ========== CARD: Konsistensi 7 Hari ========== */}
-      <section
-        className="card animate-in"
-        style={{ animationDelay: '0.1s' }}
-      >
-        <h3 className="font-bold text-neutral-800 mb-3">
+      <section className="card animate-in" style={{ animationDelay: '0.1s' }}>
+        <h3 className="font-bold text-neutral-800 dark:text-neutral-100 mb-3">
           📊 Konsistensi 7 Hari
         </h3>
         {weeklyLoading ? (
           <WeeklyChartSkeleton />
         ) : weeklyData ? (
           <WeeklyChart data={weeklyData} />
-        ) : null}
+        ) : (
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center py-4">Data 7 hari belum tersedia</p>
+        )}
       </section>
 
       {/* ========== CARD: Kalender Bulan Ini ========== */}
-      <section
-        className="card animate-in"
-        style={{ animationDelay: '0.15s' }}
-      >
-        <h3 className="font-bold text-neutral-800 mb-3">
+      <section className="card animate-in" style={{ animationDelay: '0.15s' }}>
+        <h3 className="font-bold text-neutral-800 dark:text-neutral-100 mb-3">
           📅 Kalender Ibadah
         </h3>
         <MonthlyHeatmap />
       </section>
 
       {/* ========== CARD: Tahfiz Terakhir ========== */}
-      <section
-        className="card animate-in"
-        style={{ animationDelay: '0.2s' }}
-      >
-        <h3 className="font-bold text-neutral-800 mb-3">📖 Tahfiz</h3>
+      <section className="card animate-in" style={{ animationDelay: '0.2s' }}>
+        <h3 className="font-bold text-neutral-800 dark:text-neutral-100 mb-3">📖 Tahfiz</h3>
         {tahfizLast ? (
           <TahfizSummary data={tahfizLast} />
         ) : (
@@ -117,11 +107,8 @@ export function DashboardClient({
       </section>
 
       {/* ========== CARD: Wafa Terakhir ========== */}
-      <section
-        className="card animate-in"
-        style={{ animationDelay: '0.25s' }}
-      >
-        <h3 className="font-bold text-neutral-800 mb-3">📚 Wafa</h3>
+      <section className="card animate-in" style={{ animationDelay: '0.25s' }}>
+        <h3 className="font-bold text-neutral-800 dark:text-neutral-100 mb-3">📚 Wafa</h3>
         {wafaLast ? (
           <WafaSummary data={wafaLast} />
         ) : (
@@ -144,265 +131,121 @@ function MutabaahHarian({
   isLocked,
   tanggal,
 }: {
-  items:      MutabaahItemWithStatus[]
+  items:     MutabaahItemWithStatus[]
   percentage: number
   isLocked:   boolean
   tanggal:    string
 }) {
-  const { mutate: toggle } = useToggleMutabaah()
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
-  const [savingId, setSavingId] = useState<string | null>(null)
-
-  // Hitung dari leaf items saja (parent items tidak dihitung)
-  const allItems = items.flatMap(p =>
-    p.children && p.children.length > 0 ? p.children : [p]
-  )
-  const totalItems   = allItems.length
-  const checkedItems = allItems.filter(i => i.is_checked).length
-  const isAllDone    = totalItems > 0 && checkedItems === totalItems
-
-  function handleToggle(item: MutabaahItemWithStatus) {
-    if (isLocked) return
-    setSavingId(item.id)
-    toggle(
-      { itemId: item.id, tanggal, isChecked: !item.is_checked },
-      {
-        onSuccess: () => {
-          setSavingId(null)
-        },
-        onError: (error) => {
-          setSavingId(null)
-        },
-        onSettled: () => setSavingId(null),
-      }
-    )
-  }
+  const [expandedParent, setExpandedParent] = useState<string | null>(null)
 
   return (
-    <>
-      {/* Progress summary */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-semibold text-neutral-600">
-            {checkedItems} dari {totalItems} terlaksana
-          </span>
-          <span className={cn(
-            'text-sm font-bold tabular-nums',
-            percentage >= 80 ? 'text-success' :
-            percentage >= 50 ? 'text-warning' : 'text-danger'
-          )}>
-            {percentage}%
-          </span>
-        </div>
-        <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
+    <div>
+      {/* Progress bar */}
+      <div className="flex items-center gap-3 mb-4">
+        <div className="flex-1 bg-neutral-100 dark:bg-neutral-700 rounded-full h-2">
           <div
-            className={cn(
-              'h-full rounded-full transition-all duration-500',
-              percentage >= 80 ? 'bg-success' :
-              percentage >= 50 ? 'bg-warning' : 'bg-danger'
-            )}
-            style={{ width: `${percentage}%` }}
+            className="bg-primary-500 h-2 rounded-full transition-all duration-500"
+            style={{ width: ${percentage}% }}
+            role="progressbar"
+            aria-valuenow={percentage}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={Progres mutabaah %}
           />
         </div>
+        <span className="text-sm font-bold text-primary-500 dark:text-primary-400 flex-shrink-0">{percentage}%</span>
       </div>
-
-      {/* Locked banner */}
-      {isLocked && (
-        <div className="mb-3 flex items-center gap-2 py-2 px-3 bg-neutral-100 rounded-md">
-          <span className="text-neutral-400 text-sm">🔒</span>
-          <p className="text-xs text-neutral-500">
-            Mutabaah sudah terkunci. Data hari ini tidak dapat diubah.
-          </p>
-        </div>
-      )}
 
       {/* Items */}
       <div className="space-y-2">
-        {items.map((item, index) => {
-          const hasChildren = item.children && item.children.length > 0
-          const isExpanded  = expandedIds.has(item.id)
+        {items.map((item, index) => (
+          <div key={item.id}>
+            {item.children && item.children.length > 0 ? (
+              // Parent item dengan sub-items
+              <div>
+                <button
+                  onClick={() => setExpandedParent(expandedParent === item.id ? null : item.id)}
+                  className={cn(
+                    'w-full flex items-center gap-3 p-3 rounded-lg border transition-all text-left',
+                    'active:scale-[0.98] animate-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
+                    item.is_checked
+                      ? 'bg-primary-50 dark:bg-primary-900 border-primary-200 dark:border-primary-800'
+                      : 'bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700',
+                  )}
+                  style={{ animationDelay: ${index * 0.03}s }}
+                  aria-expanded={expandedParent === item.id}
+                  aria-label={${item.nama_item} — / selesai}
+                >
+                  <div className={cn(
+                    'w-7 h-7 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all',
+                    item.is_checked
+                      ? 'bg-primary-500 border-primary-500'
+                      : 'border-neutral-300 dark:border-neutral-500 bg-white dark:bg-neutral-700',
+                  )}>
+                    {item.is_checked ? (
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                        <path d="M2.5 7L5.5 10L11.5 4" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    ) : null}
+                  </div>
 
-          if (hasChildren) {
-            return (
-              <ParentItem
-                key={item.id}
-                item={item}
-                isExpanded={isExpanded}
-                isLocked={isLocked}
-                savingId={savingId}
-                onToggle={handleToggle}
-                onExpand={() => {
-                  setExpandedIds(prev => {
-                    const next = new Set(prev)
-                    if (next.has(item.id)) next.delete(item.id)
-                    else next.add(item.id)
-                    return next
-                  })
-                }}
-                index={index}
-              />
-            )
-          }
+                  <span className={cn(
+                    'text-sm font-medium flex-1',
+                    item.is_checked ? 'text-primary-700 dark:text-primary-300' : 'text-neutral-700 dark:text-neutral-300'
+                  )}>
+                    {item.nama_item}
+                  </span>
 
-          return (
-            <FlatItem
-              key={item.id}
-              item={item}
-              isLocked={isLocked}
-              isSaving={savingId === item.id}
-              onToggle={() => handleToggle(item)}
-              index={index}
-            />
-          )
-        })}
-      </div>
+                  <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                    {item.children.filter(c => c.is_checked).length}/{item.children.length}
+                  </span>
 
-      {/* Motivation message */}
-      <div className={cn(
-        'mt-4 py-3 px-4 rounded-xl text-center text-sm font-medium',
-        isAllDone
-          ? 'bg-green-50 text-green-700 border border-green-200'
-          : 'bg-amber-50 text-amber-700 border border-amber-200'
-      )}>
-        {isAllDone ? (
-          <span>MasyaAllah 🌟 Semua ibadah hari ini telah terlaksana.</span>
-        ) : (
-          <span>Ayo semangat 💪 Masih ada ibadah yang belum tercatat.</span>
-        )}
-      </div>
-    </>
-  )
-}
-
-// -----------------------------------------------------------
-// ParentItem — Item induk yang bisa di-expand
-// -----------------------------------------------------------
-function ParentItem({
-  item,
-  isExpanded,
-  isLocked,
-  savingId,
-  onToggle,
-  onExpand,
-  index,
-}: {
-  item:         MutabaahItemWithStatus
-  isExpanded:   boolean
-  isLocked:     boolean
-  savingId:     string | null
-  onToggle:     (item: MutabaahItemWithStatus) => void
-  onExpand:     () => void
-  index:        number
-}) {
-  const children = item.children ?? []
-  const checkedCount = children.filter(c => c.is_checked).length
-  const totalCount   = children.length
-  const allDone      = totalCount > 0 && checkedCount === totalCount
-
-  return (
-    <div
-      className={cn(
-        'rounded-lg border transition-all animate-in',
-        allDone
-          ? 'bg-primary-50 border-primary-200'
-          : 'bg-white border-neutral-200'
-      )}
-      style={{ animationDelay: `${index * 0.03}s` }}
-    >
-      {/* Parent header — tap to expand */}
-      <button
-        onClick={onExpand}
-        className="w-full flex items-center gap-3 p-3.5 text-left"
-      >
-        {/* Status icon */}
-        <div className={cn(
-          'w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-sm',
-          allDone ? 'bg-primary-500 text-white' : 'bg-neutral-200 text-neutral-500'
-        )}>
-          {allDone ? '✓' : checkedCount}
-        </div>
-
-        {/* Name + count */}
-        <div className="flex-1 min-w-0">
-          <p className={cn(
-            'text-sm font-semibold',
-            allDone ? 'text-primary-700' : 'text-neutral-800'
-          )}>
-            {item.nama_item}
-          </p>
-          <p className="text-xs text-neutral-400 mt-0.5">
-            {checkedCount} dari {totalCount} terlaksana
-          </p>
-        </div>
-
-        {/* Expand arrow */}
-        <svg
-          width="16" height="16" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-          className={cn(
-            'text-neutral-400 transition-transform',
-            isExpanded && 'rotate-180'
-          )}
-        >
-          <path d="M6 9l6 6 6-6" />
-        </svg>
-      </button>
-
-      {/* Children — expanded */}
-      {isExpanded && (
-        <div className="px-3.5 pb-3 space-y-1.5 border-t border-neutral-100">
-          {children.map(child => (
-            <button
-              key={child.id}
-              onClick={() => !isLocked && onToggle(child)}
-              disabled={isLocked || savingId === child.id}
-              className={cn(
-                'w-full flex items-center gap-3 p-3 rounded-lg border transition-all text-left',
-                'active:scale-[0.98]',
-                child.is_checked
-                  ? 'bg-primary-50 border-primary-200'
-                  : 'bg-white border-neutral-200',
-                isLocked && 'opacity-70 cursor-default'
-              )}
-            >
-              {/* Checkbox */}
-              <div className={cn(
-                'w-6 h-6 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all',
-                child.is_checked
-                  ? 'bg-primary-500 border-primary-500'
-                  : 'border-neutral-300 bg-white',
-                savingId === child.id && 'opacity-50'
-              )}>
-                {savingId === child.id ? (
-                  <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : child.is_checked ? (
-                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
-                    <path d="M2.5 7L5.5 10L11.5 4" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg
+                    width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                    className={cn('transition-transform', expandedParent === item.id ? 'rotate-180' : '')}
+                    aria-hidden="true"
+                  >
+                    <path d="M6 9l6 6 6-6" />
                   </svg>
-                ) : (
-                  <span className="text-xs text-neutral-400 font-medium">✗</span>
+                </button>
+
+                {/* Child items */}
+                {expandedParent === item.id && (
+                  <div className="ml-6 mt-2 space-y-1.5">
+                    {item.children.map((child, ci) => (
+                      <ItemCheckbox
+                        key={child.id}
+                        item={child}
+                        isLocked={isLocked}
+                        isSaving={false}
+                        onToggle={() => {}}
+                        index={ci}
+                      />
+                    ))}
+                  </div>
                 )}
               </div>
-
-              {/* Label */}
-              <span className={cn(
-                'text-sm font-medium flex-1',
-                child.is_checked ? 'text-primary-700' : 'text-neutral-600'
-              )}>
-                {child.nama_item}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
+            ) : (
+              // Item tunggal (tanpa children)
+              <ItemCheckbox
+                item={item}
+                isLocked={isLocked}
+                isSaving={false}
+                onToggle={() => {}}
+                index={index}
+              />
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
 
 // -----------------------------------------------------------
-// FlatItem — Item tanpa sub-item
+// ItemCheckbox — Item mutabaah tunggal dengan toggle
 // -----------------------------------------------------------
-function FlatItem({
+function ItemCheckbox({
   item,
   isLocked,
   isSaving,
@@ -421,25 +264,26 @@ function FlatItem({
       disabled={isLocked || isSaving}
       className={cn(
         'w-full flex items-center gap-3 p-3.5 rounded-lg border transition-all text-left',
-        'active:scale-[0.98] animate-in',
+        'active:scale-[0.98] animate-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
         item.is_checked
-          ? 'bg-primary-50 border-primary-200'
-          : 'bg-white border-neutral-200',
+          ? 'bg-primary-50 dark:bg-primary-900 border-primary-200 dark:border-primary-800'
+          : 'bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700',
         isLocked && 'opacity-70 cursor-default'
       )}
-      style={{ animationDelay: `${index * 0.03}s` }}
+      style={{ animationDelay: ${index * 0.03}s }}
+      aria-label={${item.nama_item} — }
     >
       <div className={cn(
         'w-7 h-7 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all',
         item.is_checked
           ? 'bg-primary-500 border-primary-500'
-          : 'border-neutral-300 bg-white',
+          : 'border-neutral-300 dark:border-neutral-500 bg-white dark:bg-neutral-700',
         isSaving && 'opacity-50'
       )}>
         {isSaving ? (
-          <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" role="status" aria-label="Menyimpan" />
         ) : item.is_checked ? (
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
             <path d="M2.5 7L5.5 10L11.5 4" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         ) : null}
@@ -447,13 +291,13 @@ function FlatItem({
 
       <span className={cn(
         'text-sm font-medium flex-1',
-        item.is_checked ? 'text-primary-700' : 'text-neutral-700'
+        item.is_checked ? 'text-primary-700 dark:text-primary-300' : 'text-neutral-700 dark:text-neutral-300'
       )}>
         {item.nama_item}
       </span>
 
       {item.is_checked && (
-        <span className="text-xs text-primary-500 font-semibold bg-primary-100 px-2 py-0.5 rounded-full">
+        <span className="text-xs text-primary-500 dark:text-primary-400 font-semibold bg-primary-100 dark:bg-primary-900 px-2 py-0.5 rounded-full">
           ✓
         </span>
       )}
@@ -472,9 +316,9 @@ const TAHFIZ_STATUS_LABEL: Record<string, string> = {
 }
 
 const TAHFIZ_STATUS_COLOR: Record<string, string> = {
-  setoran_baru: 'bg-blue-100 text-blue-600',
-  murajaah:     'bg-amber-100 text-amber-600',
-  lulus:        'bg-green-100 text-success',
+  setoran_baru: 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300',
+  murajaah:     'bg-amber-100 text-amber-600 dark:bg-amber-900 dark:text-amber-300',
+  lulus:        'bg-green-100 text-success dark:bg-green-900 dark:text-green-300',
 }
 
 function TahfizSummary({
@@ -485,16 +329,14 @@ function TahfizSummary({
   return (
     <div className="flex items-center justify-between py-1">
       <div>
-        <p className="font-semibold text-neutral-800 text-sm">{data.surah}</p>
+        <p className="font-semibold text-neutral-800 dark:text-neutral-200 text-sm">{data.surah}</p>
         {data.ayat_awal && data.ayat_akhir && (
-          <p className="text-xs text-neutral-500 mt-0.5">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
             Ayat {data.ayat_awal}–{data.ayat_akhir}
           </p>
         )}
-        <p className="text-xs text-neutral-400 mt-0.5">
-          {new Date(data.tanggal).toLocaleDateString('id-ID', {
-            day: 'numeric', month: 'long'
-          })}
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+          {formatDate(data.tanggal)}
         </p>
       </div>
       <span className={cn(
@@ -514,9 +356,9 @@ const WAFA_STATUS_LABEL: Record<string, string> = {
 }
 
 const WAFA_STATUS_COLOR: Record<string, string> = {
-  naik:      'bg-green-100 text-success',
-  lanjut:    'bg-blue-100 text-blue-600',
-  mengulang: 'bg-amber-100 text-amber-600',
+  naik:      'bg-green-100 text-success dark:bg-green-900 dark:text-green-300',
+  lanjut:    'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300',
+  mengulang: 'bg-amber-100 text-amber-600 dark:bg-amber-900 dark:text-amber-300',
 }
 
 function WafaSummary({
@@ -527,14 +369,12 @@ function WafaSummary({
   return (
     <div className="flex items-center justify-between py-1">
       <div>
-        <p className="font-semibold text-neutral-800 text-sm">{data.jilid}</p>
+        <p className="font-semibold text-neutral-800 dark:text-neutral-200 text-sm">{data.jilid}</p>
         {data.halaman && (
-          <p className="text-xs text-neutral-500 mt-0.5">Halaman {data.halaman}</p>
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">Halaman {data.halaman}</p>
         )}
-        <p className="text-xs text-neutral-400 mt-0.5">
-          {new Date(data.tanggal).toLocaleDateString('id-ID', {
-            day: 'numeric', month: 'long'
-          })}
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+          {formatDate(data.tanggal)}
         </p>
       </div>
       <span className={cn(
@@ -547,9 +387,17 @@ function WafaSummary({
   )
 }
 
+function formatDate(dateStr: string) {
+  try {
+    return new Date(dateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'long' })
+  } catch {
+    return dateStr
+  }
+}
+
 function EmptyCard({ text }: { text: string }) {
   return (
-    <p className="text-sm text-neutral-400 text-center py-2">{text}</p>
+    <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center py-2">{text}</p>
   )
 }
 
@@ -557,10 +405,10 @@ function EmptyMutabaah() {
   return (
     <div className="text-center py-6">
       <p className="text-4xl mb-2">📋</p>
-      <p className="text-sm text-neutral-500 font-medium">
+      <p className="text-sm text-neutral-600 dark:text-neutral-300 font-medium">
         Item mutabaah belum dikonfigurasi
       </p>
-      <p className="text-xs text-neutral-400 mt-1">
+      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
         Hubungi admin sekolah untuk mengatur item ibadah
       </p>
     </div>
