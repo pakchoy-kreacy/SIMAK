@@ -1,6 +1,6 @@
-﻿// ============================================================
+// ============================================================
 // app/(parent)/dashboard/DashboardClient.tsx
-// Dashboard interaktif orang tua — redesign + dark mode
+// Dashboard interaktif orang tua - redesign + dark mode
 // ============================================================
 
 'use client'
@@ -123,7 +123,7 @@ export function DashboardClient({
 }
 
 // -----------------------------------------------------------
-// MutabaahHarian — Card progres dengan expand/collapse sub-item
+// MutabaahHarian - Card progres dengan expand/collapse sub-item
 // -----------------------------------------------------------
 function MutabaahHarian({
   items,
@@ -150,7 +150,7 @@ function MutabaahHarian({
             aria-valuenow={percentage}
             aria-valuemin={0}
             aria-valuemax={100}
-            aria-label={Progres mutabaah %}
+            aria-label={`Progres mutabaah ${percentage}%`}
           />
         </div>
         <span className="text-sm font-bold text-primary-500 dark:text-primary-400 flex-shrink-0">{percentage}%</span>
@@ -174,7 +174,7 @@ function MutabaahHarian({
                   )}
                   style={{ animationDelay: ${index * 0.03}s }}
                   aria-expanded={expandedParent === item.id}
-                  aria-label={${item.nama_item} — / selesai}
+                  aria-label={item.nama_item + " - selesai"}
                 >
                   <div className={cn(
                     'w-7 h-7 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all',
@@ -243,7 +243,7 @@ function MutabaahHarian({
 }
 
 // -----------------------------------------------------------
-// ItemCheckbox — Item mutabaah tunggal dengan toggle
+// ItemCheckbox - Item mutabaah tunggal dengan toggle
 // -----------------------------------------------------------
 function ItemCheckbox({
   item,
@@ -271,7 +271,7 @@ function ItemCheckbox({
         isLocked && 'opacity-70 cursor-default'
       )}
       style={{ animationDelay: ${index * 0.03}s }}
-      aria-label={${item.nama_item} — }
+      aria-label={item.nama_item}
     >
       <div className={cn(
         'w-7 h-7 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all',
@@ -298,7 +298,7 @@ function ItemCheckbox({
 
       {item.is_checked && (
         <span className="text-xs text-primary-500 dark:text-primary-400 font-semibold bg-primary-100 dark:bg-primary-900 px-2 py-0.5 rounded-full">
-          ✓
+          OK
         </span>
       )}
     </button>
@@ -312,7 +312,7 @@ function ItemCheckbox({
 const TAHFIZ_STATUS_LABEL: Record<string, string> = {
   setoran_baru: 'Setoran Baru',
   murajaah:     'Murajaah',
-  lulus:        '✓ Lulus',
+  lulus:        'OK Lulus',
 }
 
 const TAHFIZ_STATUS_COLOR: Record<string, string> = {
