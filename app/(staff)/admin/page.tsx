@@ -1,11 +1,11 @@
-// ============================================================
+﻿// ============================================================
 // app/(staff)/admin/page.tsx
 // Dashboard Admin — server component
 // ============================================================
 
 import { redirect }            from 'next/navigation'
 import { getStaffSession }     from '@/lib/auth/staff'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createServerClient }  from '@/lib/supabase/server'
 import { AdminDashboardClient } from './AdminDashboardClient'
 
 export default async function AdminPage() {
@@ -13,14 +13,13 @@ export default async function AdminPage() {
   if (!session) redirect('/login')
   if (session.role !== 'admin') redirect('/login')
 
-  const supabase = createServiceClient()
-
+  const supabase = await createServerClient()
   const today = new Date().toISOString().split('T')[0]
 
   const [
     { count: totalSiswa },
     { count: totalStaff },
-    { data: tahunAktif },
+    { data: tahunAktifData },
     { count: totalKelas },
     { count: mutabaahHariIni },
     { count: tahfizHariIni },
@@ -28,10 +27,11 @@ export default async function AdminPage() {
     { data: recentMutabaah },
     { data: recentTahfiz },
     { data: recentWafa },
+    { data: kelasListRaw },
   ] = await Promise.all([
     supabase.from('siswa').select('*', { count: 'exact', head: true }).eq('is_active', true),
     supabase.from('user_profile').select('*', { count: 'exact', head: true }).eq('is_active', true),
-    supabase.from('tahun_ajaran').select('id, nama').eq('is_active', true).single(),
+    supabase.from('tahun_ajaran').select('id, nama').eq('is_active', true).maybeSingle(),
     supabase.from('kelas').select('*', { count: 'exact', head: true }),
     supabase.from('mutabaah_log').select('*', { count: 'exact', head: true }).eq('tanggal', today),
     supabase.from('tahfiz_log').select('*', { count: 'exact', head: true }).eq('tanggal', today),
@@ -39,41 +39,42 @@ export default async function AdminPage() {
     supabase.from('mutabaah_log').select('id, created_at, siswa:siswa_id(nama_lengkap)').order('created_at', { ascending: false }).limit(5),
     supabase.from('tahfiz_log').select('id, created_at, siswa:siswa_id(nama_lengkap)').order('created_at', { ascending: false }).limit(5),
     supabase.from('wafa_log').select('id, created_at, siswa:siswa_id(nama_lengkap)').order('created_at', { ascending: false }).limit(5),
+    supabase.from('kelas').select('id, nama_kelas'),
   ])
 
-  // Ambil kelas list
-  const { data: kelasListRaw } = await supabase
-    .from('kelas').select('id, nama_kelas')
+  const tahunAktif = tahunAktifData?.nama ?? 'Belum ada'
+  const kelasData = kelasListRaw ?? []
 
-  // Ambil detail statistik per kelas
-  const kelasStats = await Promise.all((kelasListRaw ?? []).map(async (kelas) => {
-    const { count: totalSiswaInKelas } = await supabase
-      .from('siswa_kelas')
-      .select('id', { count: 'exact', head: true })
-      .eq('kelas_id', kelas.id)
+  // OPTIMIZED: 3 batch queries instead of N+1 per kelas
+  const { data: allSiswaKelas } = await supabase
+    .from('siswa_kelas')
+    .select('kelas_id, siswa_id')
 
-    // Ambil daftar siswa_id di kelas ini dulu
-    const { data: siswaInKelas } = await supabase
-      .from('siswa_kelas')
-      .select('siswa_id')
-      .eq('kelas_id', kelas.id)
-    const siswaIds = siswaInKelas?.map(s => s.siswa_id) ?? []
+  const { data: allMutabaahToday } = await supabase
+    .from('mutabaah_log')
+    .select('siswa_id')
+    .eq('tanggal', today)
 
-    const { count: mutabaahTodayInKelas } = await supabase
-      .from('mutabaah_log')
-      .select('id', { count: 'exact', head: true })
-      .eq('tanggal', today)
-      .in('siswa_id', siswaIds)
+  // Build lookup maps
+  const siswaPerKelas = new Map()
+  for (const sk of allSiswaKelas ?? []) {
+    if (!siswaPerKelas.has(sk.kelas_id)) siswaPerKelas.set(sk.kelas_id, [])
+    siswaPerKelas.get(sk.kelas_id).push(sk.siswa_id)
+  }
 
+  const mutabaahSiswaSet = new Set(allMutabaahToday?.map(m => m.siswa_id) ?? [])
+
+  // Build kelas stats in-memory (NO database looping)
+  const kelasStats = kelasData.map(kelas => {
+    const siswaIds = siswaPerKelas.get(kelas.id) ?? []
     return {
-      id:                   kelas.id,
-      nama:                 kelas.nama_kelas,
-      totalSiswaInKelas:    totalSiswaInKelas ?? 0,
-      mutabaahTodayInKelas: mutabaahTodayInKelas ?? 0,
+      id: kelas.id,
+      nama: kelas.nama_kelas,
+      totalSiswaInKelas: siswaIds.length,
+      mutabaahTodayInKelas: siswaIds.filter(id => mutabaahSiswaSet.has(id)).length,
     }
-  }))
+  })
 
-  // Kelas kosong = kelas dengan 0 siswa
   const kelasKosong = kelasStats.filter(k => k.totalSiswaInKelas === 0)
 
   return (
@@ -82,16 +83,16 @@ export default async function AdminPage() {
         totalSiswa:     totalSiswa ?? 0,
         totalStaff:     totalStaff ?? 0,
         totalKelas:     totalKelas ?? 0,
-        tahunAktif:     tahunAktif?.nama ?? 'Belum ada',
+        tahunAktif,
         mutabaahHariIni: mutabaahHariIni ?? 0,
         tahfizHariIni:  tahfizHariIni ?? 0,
         wafaHariIni:    wafaHariIni ?? 0,
         totalSiswaAktif: totalSiswa ?? 0,
       }}
       recentActivity={{
-        mutabaah: (recentMutabaah ?? []).map((m: any) => ({ id: m.id, time: m.created_at, nama: m.siswa?.nama_lengkap ?? '-' })),
-        tahfiz: (recentTahfiz ?? []).map((t: any) => ({ id: t.id, time: t.created_at, nama: t.siswa?.nama_lengkap ?? '-' })),
-        wafa: (recentWafa ?? []).map((w: any) => ({ id: w.id, time: w.created_at, nama: w.siswa?.nama_lengkap ?? '-' })),
+        mutabaah: (recentMutabaah ?? []).map((m) => ({ id: m.id, time: m.created_at, nama: m.siswa?.nama_lengkap ?? '-' })),
+        tahfiz: (recentTahfiz ?? []).map((t) => ({ id: t.id, time: t.created_at, nama: t.siswa?.nama_lengkap ?? '-' })),
+        wafa: (recentWafa ?? []).map((w) => ({ id: w.id, time: w.created_at, nama: w.siswa?.nama_lengkap ?? '-' })),
       }}
       kelasList={kelasStats}
       kelasKosong={kelasKosong}

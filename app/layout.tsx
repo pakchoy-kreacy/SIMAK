@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 // app/layout.tsx
 // Root layout — font, metadata, QueryClient provider
 // ============================================================
@@ -37,11 +37,10 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor:       '#2D7A4F',
+  themeColor:       [{ media: '(prefers-color-scheme: light)', color: '#2D7A4F' }, { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' }],
   width:            'device-width',
   initialScale:     1,
-  maximumScale:     1,
-  userScalable:     false,
+  maximumScale:     5,
 }
 
 export default function RootLayout({
@@ -50,8 +49,22 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="id" className={`${amiri.variable} ${plusJakarta.variable}`}>
-      <body className="font-body bg-neutral-50 text-neutral-900 antialiased">
+    <html lang="id" className={${amiri.variable} } suppressHydrationWarning>
+      <head>
+        {/* Prevent FOUC — apply dark class before paint */}
+        <script dangerouslySetInnerHTML={{
+          __html: 
+            try {
+              const saved = localStorage.getItem('simak-dark-mode');
+              const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+              if (saved !== null ? saved === 'true' : prefersDark) {
+                document.documentElement.classList.add('dark');
+              }
+            } catch(e) {}
+          
+        }} />
+      </head>
+      <body className="font-body bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 antialiased">
         <Providers>{children}</Providers>
       </body>
     </html>
