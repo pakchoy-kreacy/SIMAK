@@ -117,7 +117,7 @@ export function StaffShell({
             className="absolute inset-0 bg-black/40 transition-opacity"
             onClick={() => setSidebarOpen(false)}
           />
-          <aside className="absolute inset-y-0 left-0 w-72 bg-primary-800 text-white shadow-2xl transition-transform animate-in slide-in-from-left">
+          <aside className="absolute inset-y-0 left-0 w-72 bg-primary-800 text-white shadow-2xl transition-transform duration-200 animate-in slide-in-from-left">
             <SidebarContent
               nama={nama}
               role={role}
@@ -197,7 +197,7 @@ function SidebarContent({
   return (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="flex items-center gap-3 px-5 h-16 border-b border-primary-700/50 flex-shrink-0">
+      <div className="flex items-center gap-3 px-5 h-14 border-b border-primary-700/50 flex-shrink-0">
         <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-white">
           <img src="/logo.png" alt="SIMAK" className="w-full h-full object-contain" />
         </div>
@@ -218,15 +218,8 @@ function SidebarContent({
         )}
       </div>
 
-      {/* Role badge */}
-      <div className="px-5 pt-4 pb-2">
-        <span className={cn('text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide', ROLE_COLOR[role])}>
-          {ROLE_LABEL[role]}
-        </span>
-      </div>
-
       {/* Menu Groups */}
-      <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-1">
+      <nav className="flex-1 overflow-y-auto px-3 py-1 space-y-0.5">
         {MENU_GROUPS.map((group, groupIdx) => {
           const visibleItems = group.items.filter(item => !item.roles || item.roles.includes(role))
           if (visibleItems.length === 0) return null
@@ -250,7 +243,7 @@ function SidebarContent({
                       href={item.href}
                       onClick={onClose}
                       className={cn(
-                        'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all relative',
+                        'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 relative',
                         isActive
                           ? 'bg-white/20 text-white shadow-sm'
                           : 'text-primary-200 hover:bg-white/10 hover:text-white'
@@ -271,7 +264,7 @@ function SidebarContent({
       </nav>
 
       {/* User profile + logout */}
-      <div className="border-t border-primary-700/50 px-4 py-3 flex-shrink-0">
+      <div className="border-t border-primary-700/50 px-4 py-2 flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0">
             <span className="text-white font-bold text-sm">{nama.charAt(0)}</span>
