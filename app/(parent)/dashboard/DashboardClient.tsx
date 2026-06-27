@@ -145,7 +145,7 @@ function MutabaahHarian({
         <div className="flex-1 bg-neutral-100 dark:bg-neutral-700 rounded-full h-2">
           <div
             className="bg-primary-500 h-2 rounded-full transition-all duration-500"
-            style={{ width: ${percentage}% }}
+            style={{ width: `${percentage}%` }}
             role="progressbar"
             aria-valuenow={percentage}
             aria-valuemin={0}
@@ -172,7 +172,7 @@ function MutabaahHarian({
                       ? 'bg-primary-50 dark:bg-primary-900 border-primary-200 dark:border-primary-800'
                       : 'bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700',
                   )}
-                  style={{ animationDelay: ${index * 0.03}s }}
+                  style={{ animationDelay: `${index * 0.03}s` }}
                   aria-expanded={expandedParent === item.id}
                   aria-label={item.nama_item + " - selesai"}
                 >
@@ -270,7 +270,7 @@ function ItemCheckbox({
           : 'bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700',
         isLocked && 'opacity-70 cursor-default'
       )}
-      style={{ animationDelay: ${index * 0.03}s }}
+      style={{ animationDelay: `${index * 0.03}s` }}
       aria-label={item.nama_item}
     >
       <div className={cn(

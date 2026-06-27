@@ -67,11 +67,15 @@ export default async function AdminPage() {
   // Build kelas stats in-memory (NO database looping)
   const kelasStats = kelasData.map(kelas => {
     const siswaIds = siswaPerKelas.get(kelas.id) ?? []
+    const mutabaahToday = siswaIds.filter((id: string) => mutabaahSiswaSet.has(id)).length
+    const mutabaahRate = siswaIds.length > 0 ? Math.round((mutabaahToday / siswaIds.length) * 100) : 0
     return {
       id: kelas.id,
       nama: kelas.nama_kelas,
       totalSiswaInKelas: siswaIds.length,
-      mutabaahTodayInKelas: siswaIds.filter(id => mutabaahSiswaSet.has(id)).length,
+      mutabaahTodayInKelas: mutabaahToday,
+      jumlahSiswa: siswaIds.length,
+      mutabaahRate: mutabaahRate,
     }
   })
 
@@ -90,9 +94,9 @@ export default async function AdminPage() {
         totalSiswaAktif: totalSiswa ?? 0,
       }}
       recentActivity={{
-        mutabaah: (recentMutabaah ?? []).map((m) => ({ id: m.id, time: m.created_at, nama: m.siswa?.nama_lengkap ?? '-' })),
-        tahfiz: (recentTahfiz ?? []).map((t) => ({ id: t.id, time: t.created_at, nama: t.siswa?.nama_lengkap ?? '-' })),
-        wafa: (recentWafa ?? []).map((w) => ({ id: w.id, time: w.created_at, nama: w.siswa?.nama_lengkap ?? '-' })),
+        mutabaah: (recentMutabaah ?? []).map((m: any) => ({ id: m.id, time: m.created_at, nama: m.siswa?.nama_lengkap ?? '-' })),
+        tahfiz: (recentTahfiz ?? []).map((t: any) => ({ id: t.id, time: t.created_at, nama: t.siswa?.nama_lengkap ?? '-' })),
+        wafa: (recentWafa ?? []).map((w: any) => ({ id: w.id, time: w.created_at, nama: w.siswa?.nama_lengkap ?? '-' })),
       }}
       kelasList={kelasStats}
       kelasKosong={kelasKosong}

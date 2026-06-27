@@ -49,11 +49,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="id" className={${amiri.variable} } suppressHydrationWarning>
+    <html lang="id" className={`${amiri.variable}`} suppressHydrationWarning>
       <head>
         {/* Prevent FOUC — apply dark class before paint */}
         <script dangerouslySetInnerHTML={{
-          __html: 
+          __html: `
             try {
               const saved = localStorage.getItem('simak-dark-mode');
               const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -61,7 +61,7 @@ export default function RootLayout({
                 document.documentElement.classList.add('dark');
               }
             } catch(e) {}
-          
+          `
         }} />
       </head>
       <body className="font-body bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 antialiased">

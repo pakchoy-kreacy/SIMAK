@@ -25,6 +25,8 @@ interface KelasItem {
   nama: string
   totalSiswaInKelas: number
   mutabaahTodayInKelas: number
+  jumlahSiswa: number
+  mutabaahRate: number
 }
 
 export function AdminDashboardClient({
@@ -104,9 +106,9 @@ export function AdminDashboardClient({
                 {kelasKosong.map(k => (
                   <Link
                     key={k.id}
-                    href={/admin/kelas?kelasId=}
+                    href={`/admin/kelas?kelasId=${k.id}`}
                     className="text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900 hover:bg-amber-200 dark:hover:bg-amber-800 px-2 py-1 rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
-                    aria-label={Kelola kelas }
+                    aria-label={`Kelola kelas ${k.nama}`}
                   >
                     {k.nama}
                   </Link>
@@ -134,13 +136,13 @@ export function AdminDashboardClient({
             </div>
             <div className="w-full bg-neutral-100 dark:bg-neutral-700 rounded-full h-2 mb-1">
               <div
-                className={h-2 rounded-full transition-all duration-500 }
-                style={{ width: ${Math.min(mutabaahRate, 100)}% }}
+                className="h-2 rounded-full transition-all duration-500 bg-primary-500"
+                style={{ width: `${Math.min(mutabaahRate, 100)}%` }}
                 role="progressbar"
                 aria-valuenow={mutabaahRate}
                 aria-valuemin={0}
                 aria-valuemax={100}
-                aria-label={${mutabaahRate}% siswa sudah mengisi mutabaah}
+                aria-label={`${mutabaahRate}% siswa sudah mengisi mutabaah`}
               />
             </div>
             <p className="text-xs text-neutral-500 dark:text-neutral-400">{mutabaahRate}% dari {stats.totalSiswaAktif} siswa</p>
@@ -220,7 +222,7 @@ export function AdminDashboardClient({
 
             return allActivity.length > 0 ? (
               allActivity.map((a, i) => (
-                <div key={${a.type}-} className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-750 transition-colors">
+                <div key={`${a.type}-${i}`} className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-750 transition-colors">
                   <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
                     a.type === 'mutabaah' ? 'bg-green-50 dark:bg-green-900' : a.type === 'tahfiz' ? 'bg-emerald-50 dark:bg-emerald-900' : 'bg-amber-50 dark:bg-amber-900'
                   )} aria-hidden="true">
@@ -263,12 +265,12 @@ export function AdminDashboardClient({
               return (
                 <Link
                   key={k.id}
-                  href={/admin/kelas?kelasId=}
+                  href={`/admin/kelas?kelasId=${k.id}`}
                   className={cn(
                     'bg-white dark:bg-neutral-800 rounded-xl p-4 shadow-card border border-neutral-100 dark:border-neutral-700 hover:shadow-md hover:border-primary-300 dark:hover:border-primary-600 transition-all animate-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
                   )}
-                  style={{ animationDelay: ${i * 0.04}s }}
-                  aria-label={Kelas ,  siswa, mutabaah %}
+                  style={{ animationDelay: `${i * 0.04}s` }}
+                  aria-label={`Kelas ${k.nama}, ${k.jumlahSiswa} siswa, mutabaah ${k.mutabaahRate}%`}
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-primary-100 dark:bg-primary-900 flex items-center justify-center flex-shrink-0">
@@ -282,10 +284,10 @@ export function AdminDashboardClient({
                   
                   <div className="mt-4">
                     <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Mutabaah Hari Ini</p>
-                    <div className="w-full bg-neutral-100 dark:bg-neutral-700 rounded-full h-1.5" role="progressbar" aria-valuenow={mutabaahKelasRate} aria-valuemin={0} aria-valuemax={100} aria-label={${mutabaahKelasRate}% siswa mengisi mutabaah}>
+                    <div className="w-full bg-neutral-100 dark:bg-neutral-700 rounded-full h-1.5" role="progressbar" aria-valuenow={mutabaahKelasRate} aria-valuemin={0} aria-valuemax={100} aria-label={`${mutabaahKelasRate}% siswa mengisi mutabaah`}>
                       <div
                         className="bg-green-500 h-1.5 rounded-full transition-all duration-500"
-                        style={{ width: ${Math.min(mutabaahKelasRate, 100)}% }}
+                        style={{ width: `${Math.min(mutabaahKelasRate, 100)}%` }}
                       />
                     </div>
                     <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">{mutabaahKelasRate}% ({k.mutabaahTodayInKelas} dari {k.totalSiswaInKelas})</p>
@@ -338,7 +340,7 @@ function StatCard({ value, label, icon, color }: {
   value: number; label: string; icon: React.ReactNode; color: string
 }) {
   return (
-    <div className={g-gradient-to-br  rounded-xl p-4 text-white relative overflow-hidden}>
+    <div className={`${color} bg-gradient-to-br rounded-xl p-4 text-white relative overflow-hidden`}>
       <div className="absolute -right-3 -bottom-3 w-16 h-16 bg-white/10 rounded-full" />
       <div className="relative z-10">
         <div className="flex items-center gap-2 mb-2 opacity-80" aria-hidden="true">{icon}</div>

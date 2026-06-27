@@ -93,16 +93,19 @@ export default async function GuruPage() {
       const jumlahSiswa = siswaIds.length
       totalSiswa += jumlahSiswa
 
-      const kelasMutabaahToday = siswaIds.filter(id => mutabaahSiswaSet.has(id)).length
+      const kelasMutabaahToday = siswaIds.filter((id: string) => mutabaahSiswaSet.has(id)).length
       mutabaahToday += kelasMutabaahToday
 
       const totalItems = itemsPerKelas.get(kelas.id)?.size ?? 0
 
+      const mutabaahRate = jumlahSiswa > 0 ? Math.round((kelasMutabaahToday / jumlahSiswa) * 100) : 0
       kelasCards.push({
         kelasId: kelas.id,
         namaKelas: kelas.nama_kelas,
+        nama: kelas.nama_kelas,
         jumlahSiswa,
         mutabaahToday: kelasMutabaahToday,
+        mutabaahRate,
         totalItems,
         checkedItems: 0,
       })

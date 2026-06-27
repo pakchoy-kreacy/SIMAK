@@ -13,8 +13,10 @@ interface Stats {
 interface KelasCard {
   kelasId:      string
   namaKelas:    string
+  nama:         string
   jumlahSiswa:  number
   mutabaahToday: number
+  mutabaahRate: number
   totalItems:   number
   checkedItems: number
 }
@@ -36,7 +38,7 @@ export function GuruDashboardClient({
         <div className="absolute -right-2 -bottom-8 w-24 h-24 bg-white/5 rounded-full" />
         <div className="relative z-10">
           <p className="text-primary-100 text-xs font-medium uppercase tracking-wide">
-            {stats.tahunAktif !== 'Belum ada' ? Tahun Ajaran  : 'Dashboard Guru'}
+            {stats.tahunAktif !== 'Belum ada' ? `Tahun Ajaran ${stats.tahunAktif}` : 'Dashboard Guru'}
           </p>
           <h1 className="text-2xl font-bold mt-1">Halo, {nama.split(' ')[0]}!</h1>
         </div>
@@ -74,9 +76,9 @@ export function GuruDashboardClient({
               return (
                 <Link
                   key={kelas.kelasId}
-                  href={/guru/kelas?kelasId=}
+                  href={`/guru/kelas?kelasId=${kelas.kelasId}`}
                   className="bg-white dark:bg-neutral-800 rounded-xl shadow-card border border-neutral-100 dark:border-neutral-700 p-4 hover:shadow-md hover:border-primary-200 dark:hover:border-primary-700 transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-                  aria-label={Kelas ,  siswa, % mutabaah}
+                  aria-label={`Kelas ${kelas.nama}, ${kelas.jumlahSiswa} siswa, ${Math.round(kelas.mutabaahRate)}% mutabaah`}
                 >
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-lg bg-primary-50 dark:bg-primary-900 flex items-center justify-center" aria-hidden="true">
@@ -97,10 +99,10 @@ export function GuruDashboardClient({
                   </div>
 
                   {/* Progress bar */}
-                  <div className="w-full bg-neutral-100 dark:bg-neutral-700 rounded-full h-2 mb-1.5" role="progressbar" aria-valuenow={rate} aria-valuemin={0} aria-valuemax={100} aria-label={${rate}% siswa sudah mengisi}>
+                  <div className="w-full bg-neutral-100 dark:bg-neutral-700 rounded-full h-2 mb-1.5" role="progressbar" aria-valuenow={rate} aria-valuemin={0} aria-valuemax={100} aria-label={`${rate}% siswa sudah mengisi`}>
                     <div
-                      className={h-2 rounded-full transition-all duration-500 }
-                      style={{ width: ${Math.min(rate, 100)}% }}
+                      className="h-2 rounded-full transition-all duration-500 bg-primary-500"
+                      style={{ width: `${Math.min(rate, 100)}%` }}
                     />
                   </div>
                   <p className="text-xs text-neutral-500 dark:text-neutral-400">{rate}% sudah mengisi hari ini</p>
