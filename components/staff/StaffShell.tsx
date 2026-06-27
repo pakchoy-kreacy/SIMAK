@@ -117,7 +117,7 @@ export function StaffShell({
             className="absolute inset-0 bg-black/40 transition-opacity"
             onClick={() => setSidebarOpen(false)}
           />
-          <aside className="absolute inset-y-0 left-0 w-72 bg-primary-800 text-white shadow-2xl transition-transform duration-200 animate-in slide-in-from-left">
+          <aside className="absolute inset-y-0 left-0 w-72 bg-primary-800 text-white shadow-2xl transition-transform duration-300 ease-out animate-in slide-in-from-left">
             <SidebarContent
               nama={nama}
               role={role}
@@ -197,7 +197,7 @@ function SidebarContent({
   return (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="flex items-center gap-3 px-5 h-14 border-b border-primary-700/50 flex-shrink-0">
+      <div className="flex items-center gap-3 px-5 h-12 border-b border-primary-700/50 flex-shrink-0">
         <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-white">
           <img src="/logo.png" alt="SIMAK" className="w-full h-full object-contain" />
         </div>
@@ -219,7 +219,7 @@ function SidebarContent({
       </div>
 
       {/* Menu Groups */}
-      <nav className="flex-1 overflow-y-auto px-3 py-1 space-y-0.5">
+      <nav className="flex-1 overflow-y-auto px-2 pt-0 pb-0.5 space-y-0">
         {MENU_GROUPS.map((group, groupIdx) => {
           const visibleItems = group.items.filter(item => !item.roles || item.roles.includes(role))
           if (visibleItems.length === 0) return null
@@ -228,12 +228,12 @@ function SidebarContent({
           return (
             <div key={group.title}>
               {groupIdx > 0 && (
-                <div className="border-t border-primary-700/50 my-2" />
+                <div className="border-t border-primary-700/50 my-1" />
               )}
-              <p className="px-3 pt-1 pb-1 text-[10px] font-bold text-primary-400 uppercase tracking-widest">
+              <p className="px-3 pt-0.5 pb-0.5 text-[10px] font-bold text-primary-400 uppercase tracking-widest">
                 {group.title}
               </p>
-              <div className="space-y-0.5">
+              <div className="space-y-0">
                 {visibleItems.map((item) => {
                   const isActive = pathname === item.href ||
                     (item.href !== '/admin' && item.href !== '/tahfiz' && item.href !== '/wafa' && item.href !== '/wali-kelas' && pathname.startsWith(item.href))
@@ -243,7 +243,7 @@ function SidebarContent({
                       href={item.href}
                       onClick={onClose}
                       className={cn(
-                        'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 relative',
+                        'flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-75 relative',
                         isActive
                           ? 'bg-white/20 text-white shadow-sm'
                           : 'text-primary-200 hover:bg-white/10 hover:text-white'
@@ -264,14 +264,13 @@ function SidebarContent({
       </nav>
 
       {/* User profile + logout */}
-      <div className="border-t border-primary-700/50 px-4 py-2 flex-shrink-0">
+      <div className="border-t border-primary-700/50 px-4 py-1.5 flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0">
             <span className="text-white font-bold text-sm">{nama.charAt(0)}</span>
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-white truncate leading-tight">{nama}</p>
-            <p className="text-primary-300 text-[11px] leading-tight">{ROLE_LABEL[role]}</p>
           </div>
           <button
             onClick={onLogout}
