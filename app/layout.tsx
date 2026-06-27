@@ -49,7 +49,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="id" className={`${amiri.variable}`} suppressHydrationWarning>
+    <html lang="id" className={`${amiri.variable} ${plusJakarta.variable}`} suppressHydrationWarning>
       <head>
         {/* Prevent FOUC — apply dark class before paint */}
         <script dangerouslySetInnerHTML={{

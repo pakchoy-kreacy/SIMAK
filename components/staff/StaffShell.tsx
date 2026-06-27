@@ -136,7 +136,7 @@ export function StaffShell({
             className="absolute inset-0 bg-black/40 transition-opacity"
             onClick={() => setSidebarOpen(false)}
           />
-          <aside className="absolute inset-y-0 left-0 w-72 bg-primary-800 dark:bg-neutral-950 text-white shadow-2xl transition-transform duration-300 ease-out animate-in slide-in-from-left">
+          <aside className="absolute inset-y-0 left-0 w-72 bg-primary-800 dark:bg-neutral-950 text-white shadow-2xl transition-transform duration-200 ease-out animate-in slide-in-from-left">
             <SidebarContent
               nama={nama}
               role={role}
@@ -273,7 +273,7 @@ function SidebarContent({
                       href={item.href}
                       onClick={onClose}
                       className={cn(
-                        'flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-75 relative',
+                        'flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm font-medium transition-none relative',
                         isActive
                           ? 'bg-white/20 text-white shadow-sm'
                           : 'text-primary-200 dark:text-neutral-400 hover:bg-white/10 hover:text-white dark:hover:bg-neutral-800'
