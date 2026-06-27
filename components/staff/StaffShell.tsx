@@ -249,7 +249,7 @@ function SidebarContent({
       </div>
 
       {/* Menu Groups */}
-      <nav className="flex-1 overflow-y-auto px-2 pt-0 pb-0.5 space-y-0">
+      <nav className="flex-1 overflow-y-auto px-2 pt-4 pb-0.5 space-y-0">
         {MENU_GROUPS.map((group, groupIdx) => {
           const visibleItems = group.items.filter(item => !item.roles || item.roles.includes(role))
           if (visibleItems.length === 0) return null

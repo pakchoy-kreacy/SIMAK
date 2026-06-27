@@ -251,7 +251,34 @@ export default function AdminMutabaahItemsPage() {
 
       <div className="px-4 py-4 space-y-4">
         {isLoading ? (
-          Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-16 bg-neutral-200 rounded-lg animate-skeleton mb-2" />)
+          <div className="space-y-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-xl border border-neutral-200 p-4 animate-pulse">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-8 h-8 rounded-lg bg-neutral-200 flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-5 bg-neutral-200 rounded w-48" />
+                    <div className="flex gap-2">
+                      <div className="h-6 bg-neutral-200 rounded-full w-20" />
+                      <div className="h-6 bg-neutral-200 rounded-full w-16" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="w-8 h-8 bg-neutral-200 rounded-lg" />
+                    <div className="w-8 h-8 bg-neutral-200 rounded-lg" />
+                  </div>
+                </div>
+                <div className="space-y-2 pl-11">
+                  {Array.from({ length: 3 }).map((_, j) => (
+                    <div key={j} className="flex items-center gap-2">
+                      <div className="w-5 h-5 bg-neutral-200 rounded" />
+                      <div className="h-4 bg-neutral-200 rounded w-40" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         ) : groupedItems.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-3">

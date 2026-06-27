@@ -60,7 +60,10 @@ export default function AdminExportPage() {
   }, [tahunId, kelasId])
 
   async function handleExport() {
-    if (!tahunId) return
+    if (!tahunId || !kelasId) {
+      showToast('Pilih kelas terlebih dahulu', 'error')
+      return
+    }
     setIsLoading(true)
     try {
       const params = new URLSearchParams({ type, tahunId })
@@ -68,7 +71,8 @@ export default function AdminExportPage() {
       if (dateFrom) params.set('dateFrom', dateFrom)
       if (dateTo)   params.set('dateTo', dateTo)
 
-      const filename = `${type}_${dateFrom}_${dateTo}.xlsx`
+      const kelasName = kelasId === 'all' ? 'SemuaKelas' : kelasList.find(k => k.id === kelasId)?.nama_kelas || 'Unknown'
+      const filename = `Export_${kelasName}_${type}_${dateFrom}_${dateTo}.xlsx`
       await downloadFromUrl(`/api/admin/export?${params}`, filename)
       showToast('File berhasil didownload', 'success')
     } catch {
@@ -81,8 +85,8 @@ export default function AdminExportPage() {
     <div className="min-h-screen bg-neutral-50">
       <div className="bg-white border-b border-neutral-100 px-4 py-4 sticky top-14 md:top-0 z-30">
         <Breadcrumb />
-        <h2 className="text-lg font-bold text-neutral-800">Export Data</h2>
-        <p className="text-xs text-neutral-400 mt-0.5">Download data ke file Excel (.xlsx)</p>
+        <h2 className="text-lg font-bold text-neutral-800">Export Data Per Kelas</h2>
+        <p className="text-xs text-neutral-400 mt-0.5">Download data siswa (Mutabaah, Tahfiz, Wafa) ke file Excel (.xlsx)</p>
       </div>
 
       <div className="px-4 py-4 max-w-lg mx-auto space-y-4">
@@ -127,11 +131,22 @@ export default function AdminExportPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-neutral-600 mb-1">Kelas <span className="font-normal text-neutral-400">(opsional)</span></label>
+            <label className="block text-xs font-semibold text-neutral-600 mb-1">Pilih Kelas <span className="text-danger">*</span></label>
             <select value={kelasId} onChange={e => setKelasId(e.target.value)} className="w-full h-10 px-3 border border-neutral-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-300">
-              <option value="">Semua Kelas Aktif</option>
+              <option value="">-- Pilih Kelas untuk Export --</option>
+              <option value="all">🌍 Semua Kelas (Export Lengkap)</option>
               {kelasList.map(k => <option key={k.id} value={k.id}>Kelas {k.nama_kelas}</option>)}
             </select>
+            {kelasId && kelasId !== 'all' && (
+              <p className="text-xs text-primary-600 mt-1 font-medium">
+                ✓ Export hanya untuk Kelas {kelasList.find(k => k.id === kelasId)?.nama_kelas}
+              </p>
+            )}
+            {kelasId === 'all' && (
+              <p className="text-xs text-amber-600 mt-1 font-medium">
+                ⚠️ Export semua kelas (mungkin memakan waktu lama)
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -170,10 +185,10 @@ export default function AdminExportPage() {
         {/* Tombol export */}
         <button
           onClick={handleExport}
-          disabled={isLoading || !tahunId}
+          disabled={isLoading || !tahunId || !kelasId}
           className={cn(
             'w-full h-12 rounded-xl font-bold text-white flex items-center justify-center gap-2 transition-all',
-            isLoading || !tahunId ? 'bg-neutral-300' : 'bg-primary-500 hover:bg-primary-600 active:scale-[0.98] shadow-md'
+            isLoading || !tahunId || !kelasId ? 'bg-neutral-300 cursor-not-allowed' : 'bg-primary-500 hover:bg-primary-600 active:scale-[0.98] shadow-md'
           )}
         >
           {isLoading ? (

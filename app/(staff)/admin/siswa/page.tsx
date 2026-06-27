@@ -193,9 +193,36 @@ export default function AdminSiswaPage() {
       {/* Class groups */}
       <div className="px-4 py-4 space-y-3">
         {isLoading ? (
-          Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-24 bg-neutral-200 rounded-xl animate-skeleton" />
-          ))
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-xl shadow-card border border-neutral-100 p-4 animate-pulse">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-neutral-200" />
+                    <div className="space-y-2">
+                      <div className="h-4 bg-neutral-200 rounded w-24" />
+                      <div className="h-3 bg-neutral-200 rounded w-32" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="h-6 bg-neutral-200 rounded w-16" />
+                    <div className="w-6 h-6 bg-neutral-200 rounded" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {Array.from({ length: 3 }).map((_, j) => (
+                    <div key={j} className="flex items-center gap-3 p-2">
+                      <div className="w-8 h-8 rounded-full bg-neutral-200" />
+                      <div className="flex-1 space-y-1.5">
+                        <div className="h-3 bg-neutral-200 rounded w-40" />
+                        <div className="h-3 bg-neutral-200 rounded w-24" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         ) : kelasGroups.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-20 h-20 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-4">

@@ -138,7 +138,27 @@ export default function AdminKelasPage() {
 
       <div className="px-4 py-4 space-y-2">
         {isLoading ? (
-          Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-16 bg-neutral-200 rounded-lg animate-skeleton" />)
+          <div className="space-y-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-xl shadow-card border border-neutral-100 p-4 animate-pulse">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-neutral-200 flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-neutral-200 rounded w-32" />
+                    <div className="h-3 bg-neutral-200 rounded w-48" />
+                    <div className="flex gap-3">
+                      <div className="h-3 bg-neutral-200 rounded w-24" />
+                      <div className="h-3 bg-neutral-200 rounded w-24" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2 flex-shrink-0">
+                    <div className="w-8 h-8 bg-neutral-200 rounded-full" />
+                    <div className="w-8 h-8 bg-neutral-200 rounded-full" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : kelasList.length === 0 ? (
           <div className="bg-white rounded-xl shadow-card border border-neutral-100 text-center py-12">
             <div className="w-16 h-16 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-3">
