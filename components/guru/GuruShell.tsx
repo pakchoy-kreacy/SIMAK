@@ -25,6 +25,8 @@ const MENU_GROUPS = [
   },
 ]
 
+const SESSION_CACHE_KEY = 'simak-guru-session'
+
 export function GuruShell({
   children,
   nama,
@@ -36,6 +38,13 @@ export function GuruShell({
   const [darkMode, setDarkMode] = useState(false)
   const router   = useRouter()
   const pathname = usePathname()
+
+  // Cache session for faster subsequent navigations
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify({ nama }))
+    } catch {}
+  }, [nama])
 
   useEffect(() => {
     const saved = localStorage.getItem('simak-dark-mode')

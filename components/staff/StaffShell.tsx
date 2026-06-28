@@ -22,6 +22,8 @@ const ROLE_COLOR: Record<StaffRole, string> = {
   guru_wafa:   'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300',
 }
 
+const SESSION_CACHE_KEY = 'simak-staff-session'
+
 interface MenuItem {
   href:    string
   label:   string
@@ -86,6 +88,13 @@ export function StaffShell({
   const [darkMode, setDarkMode] = useState(false)
   const router   = useRouter()
   const pathname = usePathname()
+
+  // Cache session for faster subsequent navigations
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify({ nama, role }))
+    } catch {}
+  }, [nama, role])
 
   // Load dark mode preference
   useEffect(() => {
