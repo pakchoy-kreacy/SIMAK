@@ -6,6 +6,7 @@ import { useRouter, usePathname }              from 'next/navigation'
 import { createClient }                        from '@/lib/supabase/client'
 import { cn }                                  from '@/lib/utils/cn'
 import { GlobalSearch }                        from '@/components/ui/GlobalSearch'
+import { SessionContext, type SessionData }    from '@/lib/auth/session-context'
 
 const MENU_GROUPS = [
   {
@@ -34,10 +35,12 @@ export function GuruShell({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
-  const [nama, setNama] = useState('')
+  const [session, setSession] = useState<SessionData | null>(null)
   const [loading, setLoading] = useState(true)
   const router   = useRouter()
   const pathname = usePathname()
+
+  const nama = session?.nama ?? ''
 
   useEffect(() => {
     let cancelled = false
@@ -48,7 +51,7 @@ export function GuruShell({
         if (cached) {
           const parsed = JSON.parse(cached)
           if (!cancelled) {
-            setNama(parsed.nama)
+            setSession(parsed)
             setLoading(false)
           }
           return
@@ -60,8 +63,9 @@ export function GuruShell({
         if (res.ok) {
           const data = await res.json()
           if (!cancelled) {
-            setNama(data.nama)
-            sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify({ nama: data.nama }))
+            const sess = { nama: data.nama, role: data.role, userId: data.userId, email: data.email, roles: data.roles }
+            setSession(sess)
+            sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(sess))
           }
         } else {
           router.push('/login')
@@ -127,6 +131,7 @@ export function GuruShell({
   }
 
   return (
+    <SessionContext.Provider value={session}>
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 flex">
       {/* ── Desktop Sidebar ── */}
       <aside className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 bg-primary-800 dark:bg-neutral-950 text-white z-50">
@@ -212,6 +217,7 @@ export function GuruShell({
         </main>
       </div>
     </div>
+    </SessionContext.Provider>
   )
 }
 

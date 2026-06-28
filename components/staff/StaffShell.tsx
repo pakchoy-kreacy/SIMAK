@@ -6,6 +6,7 @@ import { useRouter, usePathname }              from 'next/navigation'
 import { createClient }                        from '@/lib/supabase/client'
 import { cn }                                  from '@/lib/utils/cn'
 import { GlobalSearch }                        from '@/components/ui/GlobalSearch'
+import { SessionContext, type SessionData }    from '@/lib/auth/session-context'
 import type { StaffRole }                      from '@/lib/types/app'
 
 const ROLE_LABEL: Record<StaffRole, string> = {
@@ -82,7 +83,7 @@ export function StaffShell({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
-  const [session, setSession] = useState<{ nama: string; role: StaffRole } | null>(null)
+  const [session, setSession] = useState<{ nama: string; role: StaffRole; userId: string; email: string; roles: StaffRole[] } | null>(null)
   const [loading, setLoading] = useState(true)
   const router   = useRouter()
   const pathname = usePathname()
@@ -113,8 +114,8 @@ export function StaffShell({
         if (res.ok) {
           const data = await res.json()
           if (!cancelled) {
-            setSession({ nama: data.nama, role: data.role })
-            sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify({ nama: data.nama, role: data.role }))
+            setSession({ nama: data.nama, role: data.role, userId: data.userId ?? '', email: data.email ?? '', roles: data.roles ?? [data.role] })
+            sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify({ nama: data.nama, role: data.role, userId: data.userId ?? '', email: data.email ?? '', roles: data.roles ?? [data.role] }))
           }
         } else {
           router.push('/login')
@@ -188,6 +189,7 @@ export function StaffShell({
   }
 
   return (
+    <SessionContext.Provider value={session}>
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 flex">
       {/* ── Desktop Sidebar ── */}
       <aside className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 bg-primary-800 dark:bg-neutral-950 text-white z-50">
@@ -275,6 +277,7 @@ export function StaffShell({
         </main>
       </div>
     </div>
+    </SessionContext.Provider>
   )
 }
 

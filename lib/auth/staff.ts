@@ -1,23 +1,45 @@
 // ============================================================
 // lib/auth/staff.ts
 // Helper untuk autentikasi staff via Supabase Auth
+// Session cached in cookie by middleware — zero DB queries on read
 // ============================================================
 
-import { createServerClient }   from '@/lib/supabase/server'
+import { cookies }             from 'next/headers'
+import { createServerClient }  from '@/lib/supabase/server'
 import type { StaffSessionData, StaffRole } from '@/lib/types/app'
+
+const SESSION_COOKIE = 'simak-session'
 
 // -----------------------------------------------------------
 // getStaffSession
-// Ambil session staff dari Supabase Auth + role dari user_profile
+// Read from cookie first (fast), fallback to DB (slow)
 // -----------------------------------------------------------
 export async function getStaffSession(): Promise<StaffSessionData | null> {
+  // 1. Try cookie cache first (instant, set by middleware)
+  try {
+    const cookieStore = await cookies()
+    const cached = cookieStore.get(SESSION_COOKIE)?.value
+    if (cached) {
+      const parsed = JSON.parse(cached)
+      if (parsed.userId && parsed.role && parsed.nama) {
+        return {
+          userId: parsed.userId,
+          email:  parsed.email ?? '',
+          nama:   parsed.nama,
+          role:   parsed.role as StaffRole,
+          roles:  (parsed.roles ?? [parsed.role]) as StaffRole[],
+        }
+      }
+    }
+  } catch {}
+
+  // 2. Fallback: DB queries (only on first load or cookie expired)
   try {
     const supabase = await createServerClient()
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) return null
 
-    // Query 1: Get profile (fast, indexed by id)
     const { data: profile, error: profileError } = await supabase
       .from('user_profile')
       .select('nama, role, is_active')
@@ -29,7 +51,6 @@ export async function getStaffSession(): Promise<StaffSessionData | null> {
     const primaryRole = profile.role as StaffRole
     let allRoles: StaffRole[] = [primaryRole]
 
-    // Query 2: Get extra roles (graceful fallback if table missing)
     try {
       const { data: extraRoles } = await supabase
         .from('user_roles')
@@ -45,17 +66,29 @@ export async function getStaffSession(): Promise<StaffSessionData | null> {
         }
         allRoles = Array.from(roleSet)
       }
-    } catch {
-      // user_roles table might not exist yet — fallback to primary role
-    }
+    } catch {}
 
-    return {
+    const sessionData = {
       userId: user.id,
       email:  user.email ?? '',
       nama:   profile.nama,
       role:   primaryRole,
       roles:  allRoles,
     }
+
+    // Write to cookie for next time
+    try {
+      const cookieStore = await cookies()
+      cookieStore.set(SESSION_COOKIE, JSON.stringify(sessionData), {
+        httpOnly: false,
+        secure:   process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path:     '/',
+        maxAge:   3600,
+      })
+    } catch {}
+
+    return sessionData
   } catch {
     return null
   }
