@@ -17,23 +17,36 @@ export async function getStaffSession(): Promise<StaffSessionData | null> {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) return null
 
-    // Single query with join: user_profile + user_roles (3 queries → 1)
+    // Query 1: Get profile (fast, indexed by id)
     const { data: profile, error: profileError } = await supabase
       .from('user_profile')
-      .select('nama, role, is_active, user_roles: user_roles(role)')
+      .select('nama, role, is_active')
       .eq('id', user.id)
       .single()
 
     if (profileError || !profile || !profile.is_active) return null
 
     const primaryRole = profile.role as StaffRole
-    const extraRoles = (profile as unknown as { user_roles: { role: string }[] | null }).user_roles ?? []
+    let allRoles: StaffRole[] = [primaryRole]
 
-    const roleSet = new Set<StaffRole>([primaryRole])
-    for (const r of extraRoles) {
-      if (['wali_kelas', 'guru_tahfiz', 'guru_wafa'].includes(r.role)) {
-        roleSet.add(r.role as StaffRole)
+    // Query 2: Get extra roles (graceful fallback if table missing)
+    try {
+      const { data: extraRoles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+
+      if (extraRoles && extraRoles.length > 0) {
+        const roleSet = new Set<StaffRole>([primaryRole])
+        for (const r of extraRoles) {
+          if (['wali_kelas', 'guru_tahfiz', 'guru_wafa'].includes(r.role)) {
+            roleSet.add(r.role as StaffRole)
+          }
+        }
+        allRoles = Array.from(roleSet)
       }
+    } catch {
+      // user_roles table might not exist yet — fallback to primary role
     }
 
     return {
@@ -41,7 +54,7 @@ export async function getStaffSession(): Promise<StaffSessionData | null> {
       email:  user.email ?? '',
       nama:   profile.nama,
       role:   primaryRole,
-      roles:  Array.from(roleSet),
+      roles:  allRoles,
     }
   } catch {
     return null
