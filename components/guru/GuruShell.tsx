@@ -29,22 +29,53 @@ const SESSION_CACHE_KEY = 'simak-guru-session'
 
 export function GuruShell({
   children,
-  nama,
 }: {
   children: React.ReactNode
-  nama:     string
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
+  const [nama, setNama] = useState('')
+  const [loading, setLoading] = useState(true)
   const router   = useRouter()
   const pathname = usePathname()
 
-  // Cache session for faster subsequent navigations
   useEffect(() => {
-    try {
-      sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify({ nama }))
-    } catch {}
-  }, [nama])
+    let cancelled = false
+
+    async function loadSession() {
+      try {
+        const cached = sessionStorage.getItem(SESSION_CACHE_KEY)
+        if (cached) {
+          const parsed = JSON.parse(cached)
+          if (!cancelled) {
+            setNama(parsed.nama)
+            setLoading(false)
+          }
+          return
+        }
+      } catch {}
+
+      try {
+        const res = await fetch('/api/auth/session')
+        if (res.ok) {
+          const data = await res.json()
+          if (!cancelled) {
+            setNama(data.nama)
+            sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify({ nama: data.nama }))
+          }
+        } else {
+          router.push('/login')
+        }
+      } catch {
+        router.push('/login')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    loadSession()
+    return () => { cancelled = true }
+  }, [router])
 
   useEffect(() => {
     const saved = localStorage.getItem('simak-dark-mode')
@@ -71,6 +102,28 @@ export function GuruShell({
     await supabase.auth.signOut()
     router.push('/login')
     router.refresh()
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 flex">
+        <aside className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 bg-primary-800 dark:bg-neutral-950 animate-pulse">
+          <div className="px-5 h-16 flex items-center gap-3 border-b border-primary-700/50">
+            <div className="w-9 h-9 bg-white/20 rounded-lg" />
+            <div className="h-5 bg-white/20 rounded w-16" />
+          </div>
+          <div className="px-4 py-4 space-y-4">
+            {[1,2,3,4,5].map(i => <div key={i} className="h-10 bg-white/10 rounded-lg" />)}
+          </div>
+        </aside>
+        <div className="flex-1 md:ml-64 p-6 space-y-4">
+          <div className="h-8 bg-neutral-200 dark:bg-neutral-700 rounded w-48 animate-pulse" />
+          <div className="grid grid-cols-2 gap-4">
+            {[1,2,3,4].map(i => <div key={i} className="h-24 bg-neutral-200 dark:bg-neutral-700 rounded-xl animate-pulse" />)}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

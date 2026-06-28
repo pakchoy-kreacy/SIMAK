@@ -77,24 +77,65 @@ const MENU_GROUPS: MenuGroup[] = [
 
 export function StaffShell({
   children,
-  nama,
-  role,
 }: {
   children: React.ReactNode
-  nama:     string
-  role:     StaffRole
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
+  const [session, setSession] = useState<{ nama: string; role: StaffRole } | null>(null)
+  const [loading, setLoading] = useState(true)
   const router   = useRouter()
   const pathname = usePathname()
 
-  // Cache session for faster subsequent navigations
+  const nama = session?.nama ?? ''
+  const role = session?.role ?? 'admin'
+
   useEffect(() => {
-    try {
-      sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify({ nama, role }))
-    } catch {}
-  }, [nama, role])
+    let cancelled = false
+
+    async function loadSession() {
+      // 1. Try sessionStorage cache first (instant)
+      try {
+        const cached = sessionStorage.getItem(SESSION_CACHE_KEY)
+        if (cached) {
+          const parsed = JSON.parse(cached)
+          if (!cancelled) {
+            setSession(parsed)
+            setLoading(false)
+          }
+          return
+        }
+      } catch {}
+
+      // 2. Fetch from API (one-time only)
+      try {
+        const res = await fetch('/api/auth/session')
+        if (res.ok) {
+          const data = await res.json()
+          if (!cancelled) {
+            setSession({ nama: data.nama, role: data.role })
+            sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify({ nama: data.nama, role: data.role }))
+          }
+        } else {
+          router.push('/login')
+        }
+      } catch {
+        router.push('/login')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    loadSession()
+    return () => { cancelled = true }
+  }, [router])
+
+  // Role-based redirect (after session loaded)
+  useEffect(() => {
+    if (!loading && session && session.role !== 'admin') {
+      router.push('/guru')
+    }
+  }, [loading, session, router])
 
   // Load dark mode preference
   useEffect(() => {
@@ -122,6 +163,28 @@ export function StaffShell({
     await supabase.auth.signOut()
     router.push('/login')
     router.refresh()
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-neutral-50 dark:bg-neutral-900 flex">
+        <aside className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 bg-primary-800 dark:bg-neutral-950 animate-pulse">
+          <div className="px-5 h-12 flex items-center gap-3 border-b border-primary-700/50">
+            <div className="w-10 h-10 rounded-lg bg-white/20" />
+            <div className="flex-1 space-y-1"><div className="h-4 bg-white/20 rounded w-16" /><div className="h-2.5 bg-white/10 rounded w-24" /></div>
+          </div>
+          <div className="px-4 py-4 space-y-4">
+            {[1,2,3,4,5].map(i => <div key={i} className="h-8 bg-white/10 rounded-lg" />)}
+          </div>
+        </aside>
+        <div className="flex-1 md:ml-64 p-6 space-y-4">
+          <div className="h-8 bg-neutral-200 dark:bg-neutral-700 rounded w-48 animate-pulse" />
+          <div className="grid grid-cols-2 gap-4">
+            {[1,2,3,4].map(i => <div key={i} className="h-24 bg-neutral-200 dark:bg-neutral-700 rounded-xl animate-pulse" />)}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
