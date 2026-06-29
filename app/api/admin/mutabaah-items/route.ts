@@ -22,8 +22,29 @@ export async function GET(request: NextRequest) {
 
     if (tahunId) query = query.eq('tahun_ajaran_id', tahunId)
 
-    const { data: raw, error } = await query as any
-    if (error) throw error
+    let raw: any[] | null = null
+    let queryError = null
+    try {
+      const res = await query
+      raw = res.data as any[]
+      queryError = res.error
+    } catch (e) {
+      queryError = e
+    }
+
+    // Fallback kalau kolom tipe belum ada di database
+    if (queryError) {
+      const errMsg = queryError instanceof Error ? queryError.message : String(queryError)
+      console.warn('mutabaah_items query dengan tipe gagal, fallback tanpa tipe:', errMsg)
+      let fallbackQuery = supabase
+        .from('mutabaah_item')
+        .select('id, nama_item, parent_id, urutan, is_active, tahun_ajaran_id, tahun_ajaran:tahun_ajaran_id(nama)')
+        .order('urutan', { ascending: true })
+      if (tahunId) fallbackQuery = fallbackQuery.eq('tahun_ajaran_id', tahunId)
+      const { data: fallbackRaw, error: fallbackError } = await fallbackQuery
+      if (fallbackError) throw fallbackError
+      raw = fallbackRaw as any[]
+    }
 
     const data: any[] = raw ?? []
     const itemIds = data.map(i => i.id)
@@ -53,7 +74,9 @@ export async function GET(request: NextRequest) {
   } catch (err: unknown) {
     if (err instanceof Error && err.message === 'UNAUTHORIZED') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     if (err instanceof Error && err.message === 'FORBIDDEN')    return NextResponse.json({ error: 'Forbidden' },    { status: 403 })
-    return NextResponse.json({ error: 'Terjadi kesalahan' }, { status: 500 })
+    console.error('GET /api/admin/mutabaah-items error:', err)
+    const message = err instanceof Error ? err.message : 'Terjadi kesalahan'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 

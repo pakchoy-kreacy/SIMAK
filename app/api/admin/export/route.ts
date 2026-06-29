@@ -44,6 +44,13 @@ export async function GET(request: NextRequest) {
       }))
       .sort((a: any, b: any) => a.nama_kelas.localeCompare(b.nama_kelas) || a.nama_lengkap.localeCompare(b.nama_lengkap))
 
+    // Mode preview: hanya return jumlah siswa & kelas
+    const isPreview = searchParams.get('preview') === '1'
+    if (isPreview) {
+      const kelasSet = new Set((skData ?? []).map((r: any) => (r.kelas as any)?.id).filter(Boolean))
+      return NextResponse.json({ siswa: siswaList.length, kelas: kelasSet.size })
+    }
+
     const siswaIds = siswaList.map(s => s.id)
     let wb: XLSX.WorkBook
     let filename: string
@@ -188,7 +195,8 @@ export async function GET(request: NextRequest) {
   } catch (err: unknown) {
     if (err instanceof Error && err.message === 'UNAUTHORIZED') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     if (err instanceof Error && err.message === 'FORBIDDEN')    return NextResponse.json({ error: 'Forbidden' },    { status: 403 })
-    console.error('GET /api/admin/export:', err)
-    return NextResponse.json({ error: 'Terjadi kesalahan saat export' }, { status: 500 })
+    console.error('GET /api/admin/export error:', err)
+    const message = err instanceof Error ? err.message : 'Terjadi kesalahan saat export'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

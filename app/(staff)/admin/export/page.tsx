@@ -51,13 +51,13 @@ export default function AdminExportPage() {
   // Fetch preview counts
   useEffect(() => {
     if (!tahunId) { setPreview(null); return }
-    const params = new URLSearchParams({ tahunId })
+    const params = new URLSearchParams({ type, tahunId })
     if (kelasId) params.set('kelasId', kelasId)
     fetch(`/api/admin/export?preview=1&${params}`)
       .then(r => r.json())
       .then(data => setPreview({ siswa: data.siswa ?? 0, kelas: data.kelas ?? 0 }))
       .catch(() => setPreview(null))
-  }, [tahunId, kelasId])
+  }, [type, tahunId, kelasId])
 
   async function handleExport() {
     if (!tahunId || !kelasId) {

@@ -98,7 +98,9 @@ export async function GET(request: NextRequest) {
   } catch (err: unknown) {
     if (err instanceof Error && err.message === 'UNAUTHORIZED') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     if (err instanceof Error && err.message === 'FORBIDDEN')    return NextResponse.json({ error: 'Forbidden' },    { status: 403 })
-    return NextResponse.json({ error: 'Terjadi kesalahan' }, { status: 500 })
+    console.error('GET /api/admin/kelas error:', err)
+    const message = err instanceof Error ? err.message : 'Terjadi kesalahan'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
@@ -133,6 +135,8 @@ export async function POST(request: NextRequest) {
   } catch (err: unknown) {
     if (err instanceof Error && err.message === 'UNAUTHORIZED') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     if (err instanceof Error && err.message === 'FORBIDDEN')    return NextResponse.json({ error: 'Forbidden' },    { status: 403 })
-    return NextResponse.json({ error: 'Terjadi kesalahan' }, { status: 500 })
+    console.error('POST /api/admin/kelas error:', err)
+    const message = err instanceof Error ? err.message : 'Terjadi kesalahan'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
