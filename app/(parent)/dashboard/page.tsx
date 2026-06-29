@@ -32,12 +32,12 @@ export default async function DashboardPage() {
   }
 
   if (tahunAjaran) {
-    // Fetch item mutabaah aktif dengan parent_id
-    // Fallback: jika parent_id belum ada di DB, query tetap jalan
-    let items: Array<{ id: string; nama_item: string; urutan: number; parent_id: string | null }> = []
+    // Fetch item mutabaah aktif dengan parent_id dan tipe
+    // Fallback: jika parent_id atau tipe belum ada di DB, query tetap jalan
+    let items: Array<{ id: string; nama_item: string; urutan: number; parent_id: string | null; tipe: string }> = []
     const { data: itemsData, error: itemsError } = await supabase
       .from('mutabaah_item')
-      .select('id, nama_item, urutan, parent_id')
+      .select('id, nama_item, urutan, parent_id, tipe')
       .eq('tahun_ajaran_id', tahunAjaran.id)
       .eq('is_active', true)
       .order('urutan', { ascending: true })
@@ -45,13 +45,21 @@ export default async function DashboardPage() {
     if (itemsError && itemsError.message?.includes('parent_id')) {
       const { data: fallbackItems } = await supabase
         .from('mutabaah_item')
-        .select('id, nama_item, urutan')
+        .select('id, nama_item, urutan, tipe')
         .eq('tahun_ajaran_id', tahunAjaran.id)
         .eq('is_active', true)
         .order('urutan', { ascending: true })
-      items = (fallbackItems ?? []).map(i => ({ ...i, parent_id: null }))
+      items = (fallbackItems ?? []).map((i: any) => ({ ...i, parent_id: null }))
+    } else if (itemsError && itemsError.message?.includes('tipe')) {
+      const { data: fallbackItems } = await supabase
+        .from('mutabaah_item')
+        .select('id, nama_item, urutan, parent_id')
+        .eq('tahun_ajaran_id', tahunAjaran.id)
+        .eq('is_active', true)
+        .order('urutan', { ascending: true })
+      items = (fallbackItems ?? []).map((i: any) => ({ ...i, tipe: 'checkbox' }))
     } else {
-      items = itemsData ?? []
+      items = (itemsData as any[]) ?? []
     }
 
     // Filter by kelas items (guru pilih item yang berlaku)
@@ -99,7 +107,7 @@ export default async function DashboardPage() {
       is_checked: logMap.get(item.id)?.is_checked ?? false,
       is_locked:  isLocked,
       parent_id:  item.parent_id,
-      tipe:       (item as any).tipe ?? 'checkbox',
+      tipe:       item.tipe ?? 'checkbox',
       catatan:    logMap.get(item.id)?.catatan ?? null,
     }))
 
@@ -160,6 +168,7 @@ export default async function DashboardPage() {
     .single()
 
   let namaKelas = ''
+  let jenisKelamin: 'L' | 'P' | null = null
   if (tahunAktif) {
     const { data: kelasData } = await supabase
       .from('siswa_kelas')
@@ -168,12 +177,21 @@ export default async function DashboardPage() {
       .eq('tahun_ajaran_id', tahunAktif.id)
       .single()
     namaKelas = (kelasData?.kelas as any)?.nama_kelas ?? ''
+
+    // Fetch jenis kelamin siswa (bisa null untuk data lama)
+    const { data: siswaData } = await supabase
+      .from('siswa')
+      .select('jenis_kelamin')
+      .eq('id', session.siswaId)
+      .single()
+    jenisKelamin = (siswaData?.jenis_kelamin as 'L' | 'P' | null) ?? null
   }
 
   return (
     <DashboardClient
       siswaName={session.siswaName}
       namaKelas={namaKelas}
+      jenisKelamin={jenisKelamin}
       tanggalLabel={formatTanggal(tanggal)}
       initialMutabaah={initialMutabaah}
       tahfizLast={tahfizLast ?? null}

@@ -18,15 +18,23 @@ import type { TahfizLog, WafaLog } from '@/lib/types/database'
 interface DashboardClientProps {
   siswaName:        string
   namaKelas:        string
+  jenisKelamin:     'L' | 'P' | null
   tanggalLabel:     string
   initialMutabaah:  MutabaahDayData
   tahfizLast:       Pick<TahfizLog, 'surah' | 'ayat_awal' | 'ayat_akhir' | 'status' | 'tanggal'> | null
   wafaLast:         Pick<WafaLog, 'jilid' | 'halaman' | 'status' | 'tanggal'> | null
 }
 
+const AVATAR_ICON: Record<'L' | 'P' | 'neutral', string> = {
+  L: '👦',
+  P: '👧',
+  neutral: '🧒',
+}
+
 export function DashboardClient({
   siswaName,
   namaKelas,
+  jenisKelamin,
   tanggalLabel,
   initialMutabaah,
   tahfizLast,
@@ -53,7 +61,7 @@ export function DashboardClient({
       <div className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl p-5 text-white animate-in">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0" aria-hidden="true">
-            <span className="text-2xl">👦</span>
+            <span className="text-2xl">{AVATAR_ICON[jenisKelamin ?? 'neutral']}</span>
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-2xl font-bold truncate">{siswaName}</p>

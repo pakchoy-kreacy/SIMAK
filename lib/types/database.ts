@@ -68,35 +68,38 @@ export interface Database {
 
       siswa: {
         Row: {
-          id:            string
-          nisn:          string
-          nama_lengkap:  string
-          parent_name:   string | null
-          parent_phone:  string | null
-          photo_url:     string | null
-          is_active:     boolean
-          created_at:    string
-          updated_at:    string
+          id:              string
+          nisn:            string
+          nama_lengkap:    string
+          parent_name:     string | null
+          parent_phone:    string | null
+          photo_url:       string | null
+          jenis_kelamin:   string | null
+          is_active:       boolean
+          created_at:      string
+          updated_at:      string
         }
         Insert: {
-          id?:           string
-          nisn:          string
-          nama_lengkap:  string
-          parent_name?:  string | null
-          parent_phone?: string | null
-          photo_url?:    string | null
-          is_active?:    boolean
-          created_at?:   string
-          updated_at?:   string
+          id?:             string
+          nisn:            string
+          nama_lengkap:    string
+          parent_name?:    string | null
+          parent_phone?:   string | null
+          photo_url?:      string | null
+          jenis_kelamin?:  string | null
+          is_active?:      boolean
+          created_at?:     string
+          updated_at?:     string
         }
         Update: {
-          nisn?:         string
-          nama_lengkap?: string
-          parent_name?:  string | null
-          parent_phone?: string | null
-          photo_url?:    string | null
-          is_active?:    boolean
-          updated_at?:   string
+          nisn?:           string
+          nama_lengkap?:   string
+          parent_name?:    string | null
+          parent_phone?:   string | null
+          photo_url?:      string | null
+          jenis_kelamin?:  string | null
+          is_active?:      boolean
+          updated_at?:     string
         }
         Relationships: []
       }
