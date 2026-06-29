@@ -54,7 +54,11 @@ export async function GET(request: NextRequest) {
       { data: mutabaahRows },
       { data: tahfizRows },
     ] = await Promise.all([
-      supabase.from('siswa_kelas').select('kelas_id, siswa_id').in('kelas_id', kelasIds),
+      (() => {
+        let q = supabase.from('siswa_kelas').select('kelas_id, siswa_id').in('kelas_id', kelasIds)
+        if (tahunId) q = q.eq('tahun_ajaran_id', tahunId)
+        return q
+      })(),
       supabase.from('mutabaah_log').select('siswa_id').eq('tanggal', today),
       supabase.from('tahfiz_log').select('siswa_id').eq('tanggal', today),
     ])

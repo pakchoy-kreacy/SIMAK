@@ -45,7 +45,7 @@ export default function AdminExportPage() {
     if (!tahunId) return
     fetch(`/api/admin/kelas?tahunId=${tahunId}`)
       .then(r => r.json())
-      .then(data => setKelasList(Array.isArray(data) ? data : []))
+      .then(data => setKelasList(Array.isArray(data) ? data.filter((k: any) => k.jumlah_siswa > 0) : []))
   }, [tahunId])
 
   // Fetch preview counts
