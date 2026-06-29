@@ -9,15 +9,16 @@ import { Breadcrumb }           from '@/components/ui/Breadcrumb'
 import { cn }                   from '@/lib/utils/cn'
 
 interface SiswaRow {
-  id:           string
-  nisn:         string
-  nama_lengkap: string
-  parent_name:  string | null
-  parent_phone: string | null
-  kelas:        string | null
-  kelas_id:     string | null
-  is_active:    boolean
-  wali_kelas:   string | null
+  id:              string
+  nisn:            string
+  nama_lengkap:    string
+  jenis_kelamin:   string | null
+  parent_name:     string | null
+  parent_phone:    string | null
+  kelas:           string | null
+  kelas_id:        string | null
+  is_active:       boolean
+  wali_kelas:      string | null
 }
 
 interface KelasGroup {

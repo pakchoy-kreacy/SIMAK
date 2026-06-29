@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     // Base: semua siswa
     let query = supabase
       .from('siswa')
-      .select('id, nisn, nama_lengkap, parent_name, parent_phone, photo_url, is_active, created_at')
+      .select('id, nisn, nama_lengkap, jenis_kelamin, parent_name, parent_phone, photo_url, is_active, created_at')
       .order('nama_lengkap', { ascending: true })
 
     if (search) {
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
     await requireRole(['admin'])
     const supabase = await createServerClient()
     const body     = await request.json()
-    const { nisn, namaLengkap, parentName, parentPhone, kelasId } = body
+    const { nisn, namaLengkap, jenisKelamin, parentName, parentPhone, kelasId } = body
 
     if (!nisn || !namaLengkap) {
       return NextResponse.json({ error: 'NISN dan nama lengkap wajib diisi' }, { status: 400 })
@@ -159,7 +159,13 @@ export async function POST(request: NextRequest) {
     // Insert siswa
     const { data: newSiswa, error } = await supabase
       .from('siswa')
-      .insert({ nisn, nama_lengkap: namaLengkap, parent_name: parentName || null, parent_phone: parentPhone || null })
+      .insert({
+        nisn,
+        nama_lengkap: namaLengkap,
+        jenis_kelamin: jenisKelamin || null,
+        parent_name: parentName || null,
+        parent_phone: parentPhone || null,
+      })
       .select().single()
     if (error) throw error
 

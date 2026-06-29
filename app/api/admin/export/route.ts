@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     // Ambil daftar siswa yang relevan
     let skQuery = supabase
       .from('siswa_kelas')
-      .select('siswa_id, siswa:siswa_id(id, nisn, nama_lengkap), kelas:kelas_id(nama_kelas)')
+      .select('siswa_id, siswa:siswa_id(id, nisn, nama_lengkap, jenis_kelamin), kelas:kelas_id(nama_kelas)')
       .eq('tahun_ajaran_id', tahunId)
 
     if (kelasId) skQuery = skQuery.eq('kelas_id', kelasId)
@@ -37,10 +37,11 @@ export async function GET(request: NextRequest) {
     const siswaList = (skData ?? [])
       .filter((r: any) => r.siswa)
       .map((r: any) => ({
-        id:           r.siswa.id,
-        nisn:         r.siswa.nisn,
-        nama_lengkap: r.siswa.nama_lengkap,
-        nama_kelas:   (r.kelas as any)?.nama_kelas ?? '-',
+        id:              r.siswa.id,
+        nisn:            r.siswa.nisn,
+        nama_lengkap:    r.siswa.nama_lengkap,
+        jenis_kelamin:   r.siswa.jenis_kelamin,
+        nama_kelas:      (r.kelas as any)?.nama_kelas ?? '-',
       }))
       .sort((a: any, b: any) => a.nama_kelas.localeCompare(b.nama_kelas) || a.nama_lengkap.localeCompare(b.nama_lengkap))
 
@@ -90,9 +91,10 @@ export async function GET(request: NextRequest) {
 
       const sheetData = siswaList.map(siswa => {
         const row: Record<string, unknown> = {
-          'NISN':         siswa.nisn,
-          'Nama Lengkap': siswa.nama_lengkap,
-          'Kelas':        siswa.nama_kelas,
+          'NISN':           siswa.nisn,
+          'Nama Lengkap':   siswa.nama_lengkap,
+          'Jenis Kelamin':  siswa.jenis_kelamin === 'L' ? 'Laki-laki' : siswa.jenis_kelamin === 'P' ? 'Perempuan' : '',
+          'Kelas':          siswa.nama_kelas,
         }
         let totalChecked = 0, totalPossible = 0
         const catatanItems: string[] = []
@@ -133,10 +135,11 @@ export async function GET(request: NextRequest) {
       const { data: logs } = await q
 
       const sheetData = (logs ?? []).map((log: any) => ({
-        'Tanggal':      log.tanggal,
-        'NISN':         log.siswa?.nisn ?? '',
-        'Nama Siswa':   log.siswa?.nama_lengkap ?? '',
-        'Surah':        log.surah,
+        'Tanggal':       log.tanggal,
+        'NISN':          log.siswa?.nisn ?? '',
+        'Nama Siswa':    log.siswa?.nama_lengkap ?? '',
+        'Jenis Kelamin': log.siswa?.jenis_kelamin === 'L' ? 'Laki-laki' : log.siswa?.jenis_kelamin === 'P' ? 'Perempuan' : '',
+        'Surah':         log.surah,
         'Ayat Awal':    log.ayat_awal ?? '',
         'Ayat Akhir':   log.ayat_akhir ?? '',
         'Status':       log.status,
@@ -163,10 +166,11 @@ export async function GET(request: NextRequest) {
       const { data: logs } = await q
 
       const sheetData = (logs ?? []).map((log: any) => ({
-        'Tanggal':    log.tanggal,
-        'NISN':       log.siswa?.nisn ?? '',
-        'Nama Siswa': log.siswa?.nama_lengkap ?? '',
-        'Jilid':      log.jilid,
+        'Tanggal':       log.tanggal,
+        'NISN':          log.siswa?.nisn ?? '',
+        'Nama Siswa':    log.siswa?.nama_lengkap ?? '',
+        'Jenis Kelamin': log.siswa?.jenis_kelamin === 'L' ? 'Laki-laki' : log.siswa?.jenis_kelamin === 'P' ? 'Perempuan' : '',
+        'Jilid':         log.jilid,
         'Halaman':    log.halaman ?? '',
         'Status':     log.status,
         'Catatan':    log.catatan ?? '',

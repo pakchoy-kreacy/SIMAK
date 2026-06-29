@@ -11,11 +11,12 @@ import { deleteOrphanKelas }         from '@/lib/utils/kelas-cleanup'
 import * as XLSX                     from 'xlsx'
 
 interface SiswaRow {
-  nisn:         string
-  nama_lengkap: string
-  parent_name?: string
-  parent_phone?: string
-  nama_kelas?:  string
+  nisn:            string
+  nama_lengkap:    string
+  jenis_kelamin?:  string
+  parent_name?:    string
+  parent_phone?:   string
+  nama_kelas?:     string
 }
 
 export async function POST(request: NextRequest) {
@@ -42,12 +43,16 @@ export async function POST(request: NextRequest) {
       for (const [k, v] of Object.entries(row)) {
         normalized[k.toLowerCase().replace(/\s+/g, '_')] = String(v).trim()
       }
+      const jkRaw = normalized['jenis_kelamin'] ?? normalized['jk'] ?? normalized['gender'] ?? normalized['kelamin'] ?? ''
+      const jk = ['L','P'].includes(jkRaw.toUpperCase()) ? jkRaw.toUpperCase() : ''
+
       return {
-        nisn:         normalized['nisn']         ?? normalized['no_nisn'] ?? '',
-        nama_lengkap: normalized['nama_lengkap'] ?? normalized['nama']    ?? '',
-        parent_name:  normalized['nama_orang_tua'] ?? normalized['parent_name'] ?? '',
-        parent_phone: normalized['no_hp'] ?? normalized['parent_phone'] ?? normalized['telepon'] ?? '',
-        nama_kelas:   normalized['kelas'] ?? normalized['nama_kelas'] ?? '',
+        nisn:           normalized['nisn']         ?? normalized['no_nisn'] ?? '',
+        nama_lengkap:   normalized['nama_lengkap'] ?? normalized['nama']    ?? '',
+        jenis_kelamin:  jk || undefined,
+        parent_name:    normalized['nama_orang_tua'] ?? normalized['parent_name'] ?? '',
+        parent_phone:   normalized['no_hp'] ?? normalized['parent_phone'] ?? normalized['telepon'] ?? '',
+        nama_kelas:     normalized['kelas'] ?? normalized['nama_kelas'] ?? '',
       }
     })
 
@@ -61,6 +66,10 @@ export async function POST(request: NextRequest) {
       if (!row.nisn) { errors.push(`Baris ${rowNum}: NISN kosong`); continue }
       if (!/^\d{10}$/.test(row.nisn)) { errors.push(`Baris ${rowNum}: NISN "${row.nisn}" tidak valid (harus 10 digit)`); continue }
       if (!row.nama_lengkap) { errors.push(`Baris ${rowNum}: Nama lengkap kosong`); continue }
+      if (row.jenis_kelamin && !['L','P'].includes(row.jenis_kelamin)) {
+        errors.push(`Baris ${rowNum}: Jenis kelamin "${row.jenis_kelamin}" tidak valid (gunakan L atau P)`)
+        continue
+      }
       valid.push(row)
     }
 
@@ -118,10 +127,11 @@ export async function POST(request: NextRequest) {
       const { data: newSiswa, error: insertErr } = await supabase
         .from('siswa')
         .insert(toInsert.map(r => ({
-          nisn:         r.nisn,
-          nama_lengkap: r.nama_lengkap,
-          parent_name:  r.parent_name || null,
-          parent_phone: r.parent_phone || null,
+          nisn:           r.nisn,
+          nama_lengkap:   r.nama_lengkap,
+          jenis_kelamin:  r.jenis_kelamin || null,
+          parent_name:    r.parent_name || null,
+          parent_phone:   r.parent_phone || null,
         })))
         .select('id, nisn, nama_lengkap')
 

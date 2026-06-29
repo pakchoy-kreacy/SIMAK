@@ -14,7 +14,7 @@ interface ImportResult {
   total:   number
   valid:   number
   errors:  string[]
-  preview: Array<{ nisn: string; nama_lengkap: string; nama_kelas?: string }>
+  preview: Array<{ nisn: string; nama_lengkap: string; jenis_kelamin?: string; nama_kelas?: string }>
 }
 
 interface Props {
@@ -202,7 +202,8 @@ export function ImportExcelModal({ onClose, onSuccess }: Props) {
                         <span className="font-mono text-neutral-500">{r.nisn}</span>
                         <span className="mx-2">·</span>
                         <span className="font-medium">{r.nama_lengkap}</span>
-                        {r.nama_kelas && <span className="ml-2 text-neutral-400">Kelas {r.nama_kelas}</span>}
+                        {r.jenis_kelamin && <span className="ml-2 text-neutral-400">{r.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan'}</span>}
+                      {r.nama_kelas && <span className="ml-2 text-neutral-400">Kelas {r.nama_kelas}</span>}
                       </div>
                     ))}
                   </div>

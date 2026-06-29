@@ -11,23 +11,25 @@ import { cn }        from '@/lib/utils/cn'
 
 interface Props {
   siswa: {
-    id:           string
-    nisn:         string
-    nama_lengkap: string
-    parent_name:  string | null
-    parent_phone: string | null
-    photo_url:    string | null
-    is_active:    boolean
+    id:            string
+    nisn:          string
+    nama_lengkap:  string
+    jenis_kelamin: string | null
+    parent_name:   string | null
+    parent_phone:  string | null
+    photo_url:     string | null
+    is_active:     boolean
   }
   kelasHistory: Array<{ namaKelas: string; tahunAjaran: string }>
 }
 
 export function AdminSiswaDetailClient({ siswa, kelasHistory }: Props) {
   const router = useRouter()
-  const [nama,        setNama]        = useState(siswa.nama_lengkap)
-  const [parentName,  setParentName]  = useState(siswa.parent_name ?? '')
-  const [parentPhone, setParentPhone] = useState(siswa.parent_phone ?? '')
-  const [isLoading,   setIsLoading]   = useState(false)
+  const [nama,         setNama]         = useState(siswa.nama_lengkap)
+  const [jenisKelamin, setJenisKelamin] = useState<'L' | 'P' | ''>((siswa.jenis_kelamin as 'L' | 'P' | null) ?? '')
+  const [parentName,   setParentName]   = useState(siswa.parent_name ?? '')
+  const [parentPhone,  setParentPhone]  = useState(siswa.parent_phone ?? '')
+  const [isLoading,    setIsLoading]    = useState(false)
   const { showToast, ToastComponent } = useToast()
 
   async function handleSave(e: React.FormEvent) {
@@ -36,7 +38,7 @@ export function AdminSiswaDetailClient({ siswa, kelasHistory }: Props) {
     const res = await fetch(`/api/admin/siswa/${siswa.id}`, {
       method:  'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ namaLengkap: nama, parentName, parentPhone }),
+      body:    JSON.stringify({ namaLengkap: nama, jenisKelamin: jenisKelamin || null, parentName, parentPhone }),
     })
     if (res.ok) {
       showToast('Data siswa diperbarui', 'success')
@@ -64,6 +66,14 @@ export function AdminSiswaDetailClient({ siswa, kelasHistory }: Props) {
           <div>
             <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Nama Lengkap</label>
             <input type="text" value={nama} onChange={e => setNama(e.target.value)} className="w-full h-11 px-4 border border-neutral-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-300" required />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Jenis Kelamin</label>
+            <select value={jenisKelamin} onChange={e => setJenisKelamin(e.target.value as 'L' | 'P' | '')} className="w-full h-11 px-3 border border-neutral-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-300">
+              <option value="">-- Pilih --</option>
+              <option value="L">Laki-laki</option>
+              <option value="P">Perempuan</option>
+            </select>
           </div>
           <div>
             <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Nama Orang Tua</label>

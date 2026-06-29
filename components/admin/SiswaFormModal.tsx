@@ -9,12 +9,13 @@ import { useState, useEffect } from 'react'
 import { cn }                  from '@/lib/utils/cn'
 
 interface SiswaRow {
-  id:           string
-  nisn:         string
-  nama_lengkap: string
-  parent_name:  string | null
-  parent_phone: string | null
-  kelas:        string | null
+  id:              string
+  nisn:            string
+  nama_lengkap:    string
+  jenis_kelamin:   string | null
+  parent_name:     string | null
+  parent_phone:    string | null
+  kelas:           string | null
 }
 
 interface KelasItem {
@@ -31,14 +32,15 @@ interface Props {
 export function SiswaFormModal({ siswa, onClose, onSuccess }: Props) {
   const isEdit = !!siswa
 
-  const [nisn,        setNisn]        = useState(siswa?.nisn         ?? '')
-  const [nama,        setNama]        = useState(siswa?.nama_lengkap ?? '')
-  const [parentName,  setParentName]  = useState(siswa?.parent_name  ?? '')
-  const [parentPhone, setParentPhone] = useState(siswa?.parent_phone ?? '')
-  const [kelasId,     setKelasId]     = useState('')
-  const [kelasList,   setKelasList]   = useState<KelasItem[]>([])
-  const [errors,      setErrors]      = useState<Record<string, string>>({})
-  const [isLoading,   setIsLoading]   = useState(false)
+  const [nisn,          setNisn]          = useState(siswa?.nisn           ?? '')
+  const [nama,          setNama]          = useState(siswa?.nama_lengkap   ?? '')
+  const [jenisKelamin,  setJenisKelamin]  = useState<'L' | 'P' | ''>((siswa?.jenis_kelamin as 'L' | 'P' | null) ?? '')
+  const [parentName,    setParentName]    = useState(siswa?.parent_name    ?? '')
+  const [parentPhone,   setParentPhone]   = useState(siswa?.parent_phone   ?? '')
+  const [kelasId,       setKelasId]       = useState('')
+  const [kelasList,     setKelasList]     = useState<KelasItem[]>([])
+  const [errors,        setErrors]        = useState<Record<string, string>>({})
+  const [isLoading,     setIsLoading]     = useState(false)
 
   useEffect(() => {
     fetch('/api/admin/kelas')
@@ -60,8 +62,8 @@ export function SiswaFormModal({ siswa, onClose, onSuccess }: Props) {
     setIsLoading(true)
 
     const body = isEdit
-      ? { namaLengkap: nama, parentName, parentPhone, kelasId: kelasId || undefined }
-      : { nisn, namaLengkap: nama, parentName, parentPhone, kelasId: kelasId || undefined }
+      ? { namaLengkap: nama, jenisKelamin: jenisKelamin || null, parentName, parentPhone, kelasId: kelasId || undefined }
+      : { nisn, namaLengkap: nama, jenisKelamin: jenisKelamin || null, parentName, parentPhone, kelasId: kelasId || undefined }
 
     const url    = isEdit ? `/api/admin/siswa/${siswa!.id}` : '/api/admin/siswa'
     const method = isEdit ? 'PATCH' : 'POST'
@@ -135,6 +137,22 @@ export function SiswaFormModal({ siswa, onClose, onSuccess }: Props) {
               )}
             />
             {errors.nama && <p className="text-xs text-danger mt-1">{errors.nama}</p>}
+          </div>
+
+          {/* Jenis kelamin */}
+          <div>
+            <label className="block text-sm font-semibold text-neutral-700 mb-1.5">
+              Jenis Kelamin <span className="text-neutral-400 font-normal">(opsional)</span>
+            </label>
+            <select
+              value={jenisKelamin}
+              onChange={e => setJenisKelamin(e.target.value as 'L' | 'P' | '')}
+              className="w-full h-11 px-3 border border-neutral-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-300"
+            >
+              <option value="">-- Pilih Jenis Kelamin --</option>
+              <option value="L">Laki-laki</option>
+              <option value="P">Perempuan</option>
+            </select>
           </div>
 
           {/* Nama orang tua */}

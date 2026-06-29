@@ -22,7 +22,7 @@ export default async function AdminSiswaDetailPage({ params }: Props) {
 
   const { data: siswa } = await supabase
     .from('siswa')
-    .select('id, nisn, nama_lengkap, parent_name, parent_phone, photo_url, is_active')
+    .select('id, nisn, nama_lengkap, jenis_kelamin, parent_name, parent_phone, photo_url, is_active')
     .eq('id', siswaId)
     .single()
 

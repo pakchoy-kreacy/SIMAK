@@ -9,10 +9,10 @@ import * as XLSX from 'xlsx'
 // Generate template Excel untuk import siswa
 // -----------------------------------------------------------
 export function generateImportTemplate(): Blob {
-  const headers = ['nisn', 'nama_lengkap', 'nama_orang_tua', 'no_hp', 'kelas']
+  const headers = ['nisn', 'nama_lengkap', 'jenis_kelamin', 'nama_orang_tua', 'no_hp', 'kelas']
   const contoh = [
-    ['0123456701', 'Muhammad Azzam Al-Fatih', 'Bapak Ridwan',  '081234567001', '4.1'],
-    ['0123456702', 'Aisyah Zahra Ramadhani',  'Ibu Kartini',   '081234567002', '4.2'],
+    ['0123456701', 'Muhammad Azzam Al-Fatih', 'L', 'Bapak Ridwan',  '081234567001', '4.1'],
+    ['0123456702', 'Aisyah Zahra Ramadhani',  'P', 'Ibu Kartini',   '081234567002', '4.2'],
   ]
 
   const ws = XLSX.utils.aoa_to_sheet([headers, ...contoh])
@@ -21,6 +21,7 @@ export function generateImportTemplate(): Blob {
   ws['!cols'] = [
     { wch: 15 },  // nisn
     { wch: 30 },  // nama_lengkap
+    { wch: 15 },  // jenis_kelamin
     { wch: 25 },  // nama_orang_tua
     { wch: 18 },  // no_hp
     { wch: 10 },  // kelas
@@ -36,6 +37,7 @@ export function generateImportTemplate(): Blob {
     ['Kolom', 'Keterangan', 'Wajib'],
     ['nisn',          'Nomor Induk Siswa Nasional (10 digit angka)', 'Ya'],
     ['nama_lengkap',  'Nama lengkap siswa',                         'Ya'],
+    ['jenis_kelamin', 'L untuk laki-laki, P untuk perempuan',       'Tidak'],
     ['nama_orang_tua','Nama orang tua/wali',                        'Tidak'],
     ['no_hp',         'Nomor HP/WA orang tua',                      'Tidak'],
     ['kelas',         'Nama kelas (harus sesuai dengan kelas di sistem, contoh: 4.1, 4.2, 1.3)', 'Tidak'],

@@ -38,12 +38,13 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     const supabase = await createServerClient()
     const { id }   = await params
     const body     = await request.json()
-    const { namaLengkap, parentName, parentPhone, kelasId } = body
+    const { namaLengkap, jenisKelamin, parentName, parentPhone, kelasId } = body
 
     const updates: Record<string, unknown> = {}
-    if (namaLengkap  !== undefined) updates.nama_lengkap  = namaLengkap
-    if (parentName   !== undefined) updates.parent_name   = parentName || null
-    if (parentPhone  !== undefined) updates.parent_phone  = parentPhone || null
+    if (namaLengkap   !== undefined) updates.nama_lengkap   = namaLengkap
+    if (jenisKelamin  !== undefined) updates.jenis_kelamin  = jenisKelamin || null
+    if (parentName    !== undefined) updates.parent_name    = parentName || null
+    if (parentPhone   !== undefined) updates.parent_phone   = parentPhone || null
 
     if (Object.keys(updates).length > 0) {
       const { error } = await supabase.from('siswa').update(updates as never).eq('id', id)
