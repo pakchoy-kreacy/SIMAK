@@ -105,7 +105,7 @@ export default function AdminKelasPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ namaKelas: formNama, waliKelasId: formWali || null }),
       })
-      if (res.ok) { showToast('Kelas diperbarui', 'success'); setShowForm(false); queryClient.invalidateQueries({ queryKey: ['kelas'] }) }
+      if (res.ok) { showToast('Kelas diperbarui', 'success'); setShowForm(false); queryClient.invalidateQueries({ queryKey: ['kelas'], exact: false }) }
       else { const d = await res.json(); showToast(d.error ?? 'Gagal', 'error') }
     } else {
       const res = await fetch('/api/admin/kelas', {
@@ -113,7 +113,7 @@ export default function AdminKelasPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ namaKelas: formNama, tahunAjaranId: formTahun, waliKelasId: formWali || null }),
       })
-      if (res.ok) { showToast('Kelas ditambahkan', 'success'); setShowForm(false); queryClient.invalidateQueries({ queryKey: ['kelas'] }) }
+      if (res.ok) { showToast('Kelas ditambahkan', 'success'); setShowForm(false); queryClient.invalidateQueries({ queryKey: ['kelas'], exact: false }) }
       else { const d = await res.json(); showToast(d.error ?? 'Gagal', 'error') }
     }
     setFormLoading(false)
@@ -121,7 +121,7 @@ export default function AdminKelasPage() {
 
   async function handleDelete(id: string) {
     const res = await fetch(`/api/admin/kelas/${id}`, { method: 'DELETE' })
-    if (res.ok) { showToast('Kelas dihapus', 'success'); setConfirmDel(null); queryClient.invalidateQueries({ queryKey: ['kelas'] }) }
+    if (res.ok) { showToast('Kelas dihapus', 'success'); setConfirmDel(null); queryClient.invalidateQueries({ queryKey: ['kelas'], exact: false }) }
     else { const d = await res.json(); showToast(d.error ?? 'Gagal menghapus', 'error') }
   }
 

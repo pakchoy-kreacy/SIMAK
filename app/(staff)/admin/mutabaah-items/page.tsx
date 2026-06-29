@@ -138,7 +138,7 @@ export default function AdminMutabaahItemsPage() {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ namaItem: formNama }),
       })
-      if (res.ok) { showToast('Item diperbarui', 'success'); setShowMainForm(false); queryClient.invalidateQueries({ queryKey: ['mutabaah-items'] }) }
+      if (res.ok) { showToast('Item diperbarui', 'success'); setShowMainForm(false); queryClient.invalidateQueries({ queryKey: ['mutabaah-items'], exact: false }) }
       else { const d = await res.json(); showToast(d.error ?? 'Gagal', 'error') }
       setFormLoad(false)
       return
@@ -163,7 +163,7 @@ export default function AdminMutabaahItemsPage() {
       const data = await res.json()
       showToast(data.message || 'Item ditambahkan', 'success')
       setShowMainForm(false)
-      queryClient.invalidateQueries({ queryKey: ['mutabaah-items'] })
+      queryClient.invalidateQueries({ queryKey: ['mutabaah-items'], exact: false })
     } else {
       const d = await res.json()
       showToast(d.error ?? 'Gagal', 'error')
@@ -185,7 +185,7 @@ export default function AdminMutabaahItemsPage() {
     if (res.ok) {
       showToast('Sub item ditambahkan', 'success')
       setShowSubForm(false)
-      queryClient.invalidateQueries({ queryKey: ['mutabaah-items'] })
+      queryClient.invalidateQueries({ queryKey: ['mutabaah-items'], exact: false })
     } else {
       const d = await res.json()
       showToast(d.error ?? 'Gagal', 'error')
@@ -209,7 +209,7 @@ export default function AdminMutabaahItemsPage() {
     if (res.ok) {
       showToast('Item berhasil dipindahkan', 'success')
       setShowMoveModal(false)
-      queryClient.invalidateQueries({ queryKey: ['mutabaah-items'] })
+      queryClient.invalidateQueries({ queryKey: ['mutabaah-items'], exact: false })
     } else {
       const d = await res.json()
       showToast(d.error ?? 'Gagal memindahkan', 'error')
@@ -219,13 +219,13 @@ export default function AdminMutabaahItemsPage() {
 
   async function handleDelete(id: string) {
     const res = await fetch(`/api/admin/mutabaah-items/${id}`, { method: 'DELETE' })
-    if (res.ok) { showToast('Item diarsipkan', 'success'); setConfirmDel(null); queryClient.invalidateQueries({ queryKey: ['mutabaah-items'] }) }
+    if (res.ok) { showToast('Item diarsipkan', 'success'); setConfirmDel(null); queryClient.invalidateQueries({ queryKey: ['mutabaah-items'], exact: false }) }
     else showToast('Gagal', 'error')
   }
 
   async function handleHapus(id: string) {
     const res = await fetch(`/api/admin/mutabaah-items/${id}?permanent=true`, { method: 'DELETE' })
-    if (res.ok) { showToast('Item dihapus permanen', 'success'); setConfirmHapus(null); queryClient.invalidateQueries({ queryKey: ['mutabaah-items'] }) }
+    if (res.ok) { showToast('Item dihapus permanen', 'success'); setConfirmHapus(null); queryClient.invalidateQueries({ queryKey: ['mutabaah-items'], exact: false }) }
     else { const d = await res.json(); showToast(d.error ?? 'Gagal', 'error') }
   }
 
@@ -237,7 +237,7 @@ export default function AdminMutabaahItemsPage() {
     })
     if (res.ok) {
       showToast(`Lepas dari ${kelasNama} berhasil`, 'success')
-      queryClient.invalidateQueries({ queryKey: ['mutabaah-items'] })
+      queryClient.invalidateQueries({ queryKey: ['mutabaah-items'], exact: false })
     } else {
       const d = await res.json()
       showToast(d.error ?? 'Gagal', 'error')

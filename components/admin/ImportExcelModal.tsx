@@ -77,7 +77,7 @@ export function ImportExcelModal({ onClose, onSuccess }: Props) {
     if (res.ok) {
       setResult({ inserted: data.inserted, skipped: data.skipped })
       setStep('done')
-      queryClient.invalidateQueries({ queryKey: ['kelas'] })
+      queryClient.invalidateQueries({ queryKey: ['kelas'], exact: false })
     }
     setIsLoading(false)
   }
