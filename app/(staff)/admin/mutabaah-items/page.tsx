@@ -57,6 +57,7 @@ export default function AdminMutabaahItemsPage() {
   const [formLoad,   setFormLoad]   = useState(false)
   const [confirmDel, setConfirmDel] = useState<string | null>(null)
   const [confirmHapus, setConfirmHapus] = useState<string | null>(null)
+  const [confirmUnassignItem, setConfirmUnassignItem] = useState<ItemRow | null>(null)
 
   // Collapse state per parent
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set())
@@ -76,7 +77,7 @@ export default function AdminMutabaahItemsPage() {
     staleTime: 60000,
   })
 
-  const { data: kelasList = [] } = useQuery<{ id: string; nama_kelas: string }[]>({
+  const { data: kelasList = [] } = useQuery<{ id: string; nama_kelas: string; jumlah_siswa: number }[]>({
     queryKey: ['admin-kelas'],
     queryFn: async () => {
       const r = await fetch('/api/admin/kelas')
@@ -263,6 +264,22 @@ export default function AdminMutabaahItemsPage() {
     }
   }
 
+  async function handleUnassignAll(item: ItemRow) {
+    const res = await fetch('/api/admin/mutabaah-items', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ itemId: item.id }),
+    })
+    if (res.ok) {
+      showToast(`Semua kelas dilepas dari ${item.nama_item}`, 'success')
+      setConfirmUnassignItem(null)
+      queryClient.invalidateQueries({ queryKey: ['mutabaah-items'], exact: false })
+    } else {
+      const d = await res.json()
+      showToast(d.error ?? 'Gagal melepas semua kelas', 'error')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-neutral-50">
       <div className="bg-white border-b border-neutral-100 px-4 py-4 sticky top-14 md:top-0 z-30">
@@ -436,6 +453,14 @@ export default function AdminMutabaahItemsPage() {
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                             Terapkan ke Kelas
                           </button>
+                          {group.kelas_list.length > 0 && (
+                            <button
+                              onClick={() => setConfirmUnassignItem(group)}
+                              className="h-8 px-3 bg-red-100 hover:bg-red-200 text-danger text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors"
+                            >
+                              Lepas Semua
+                            </button>
+                          )}
                           <button
                             onClick={() => openEditForm(group)}
                             className="h-8 px-3 border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-600 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors"
@@ -475,7 +500,7 @@ export default function AdminMutabaahItemsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {kelasList.map(k => {
                     const assignedItems = items.filter(i => i.kelas_list.some(kl => kl.kelas_id === k.id))
-                    const totalSiswa = 0 // would need separate API for student count per kelas
+                    const totalSiswa = k.jumlah_siswa ?? 0
                     const isExpanded = expandedKelas === k.id
                     return (
                       <div key={k.id} className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
@@ -490,7 +515,7 @@ export default function AdminMutabaahItemsPage() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-neutral-800">{k.nama_kelas}</p>
-                            <p className="text-xs text-neutral-500">{assignedItems.length} item diterapkan</p>
+                            <p className="text-xs text-neutral-500">{totalSiswa} siswa · {assignedItems.length} item</p>
                           </div>
                           <svg
                             width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round"
@@ -505,9 +530,16 @@ export default function AdminMutabaahItemsPage() {
                               <p className="text-xs text-neutral-400">Belum ada item untuk kelas ini</p>
                             ) : (
                               assignedItems.map(item => (
-                                <div key={item.id} className="flex items-center gap-2 py-1">
+                                <div key={item.id} className="flex items-center gap-2 py-1 group">
                                   <span className="w-1.5 h-1.5 rounded-full bg-primary-400 flex-shrink-0" />
-                                  <span className="text-xs text-neutral-600">{item.nama_item}</span>
+                                  <span className="text-xs text-neutral-600 flex-1">{item.nama_item}</span>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); handleUnassign(item.id, k.id, k.nama_kelas) }}
+                                    className="text-[10px] text-danger hover:bg-red-50 px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                    title={`Lepas ${item.nama_item} dari ${k.nama_kelas}`}
+                                  >
+                                    Hapus
+                                  </button>
                                 </div>
                               ))
                             )}
@@ -777,6 +809,25 @@ export default function AdminMutabaahItemsPage() {
                   {assignLoad ? 'Menyimpan...' : `Terapkan ke ${selectedKelas.length} Kelas`}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Lepas Semua Kelas Modal */}
+      {confirmUnassignItem && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-xl p-4">
+            <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-3">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E74C3C" strokeWidth="2" strokeLinecap="round"><path d="M21 4H3l1 16h16L21 4z"/><line x1="10" y1="11" x2="14" y2="11"/></svg>
+            </div>
+            <h3 className="font-bold text-neutral-800 text-center mb-2">Lepas Semua Kelas?</h3>
+            <p className="text-sm text-neutral-500 text-center mb-4">
+              Item <strong>{confirmUnassignItem.nama_item}</strong> akan dilepas dari {confirmUnassignItem.kelas_list.length} kelas.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmUnassignItem(null)} className="flex-1 h-11 border border-neutral-200 rounded-lg text-sm font-semibold text-neutral-600">Batal</button>
+              <button onClick={() => handleUnassignAll(confirmUnassignItem)} className="flex-1 h-11 bg-danger text-white rounded-lg text-sm font-semibold hover:bg-red-700">Lepas Semua</button>
             </div>
           </div>
         </div>

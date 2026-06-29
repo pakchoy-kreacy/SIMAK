@@ -114,23 +114,23 @@ export async function PATCH(request: NextRequest) {
 }
 
 // DELETE: Unassign kelas dari item mutabaah
-// Body: { itemId, kelasId }
+// Body: { itemId, kelasId } untuk hapus satu assignment
+// Body: { itemId } untuk hapus semua assignment item tersebut
 export async function DELETE(request: NextRequest) {
   try {
     await requireRole(['admin'])
     const supabase = await createServerClient()
     const body     = await request.json()
-    const { itemId, kelasId } = body as { itemId: string; kelasId: string }
+    const { itemId, kelasId } = body as { itemId: string; kelasId?: string }
 
-    if (!itemId || !kelasId) {
-      return NextResponse.json({ error: 'itemId dan kelasId wajib diisi' }, { status: 400 })
+    if (!itemId) {
+      return NextResponse.json({ error: 'itemId wajib diisi' }, { status: 400 })
     }
 
-    const { error } = await supabase
-      .from('kelas_mutabaah_item')
-      .delete()
-      .eq('mutabaah_item_id', itemId)
-      .eq('kelas_id', kelasId)
+    let query = supabase.from('kelas_mutabaah_item').delete().eq('mutabaah_item_id', itemId)
+    if (kelasId) query = query.eq('kelas_id', kelasId)
+
+    const { error } = await query
     if (error) throw error
 
     return NextResponse.json({ success: true })

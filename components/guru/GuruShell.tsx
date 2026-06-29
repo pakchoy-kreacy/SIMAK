@@ -19,6 +19,13 @@ const MENU_GROUPS = [
       { href: '/guru/atur-mutabaah', label: 'Atur Item Mutabaah', icon: <IconSettings /> },
     ],
   },
+  {
+    title: 'Penilaian',
+    items: [
+      { href: '/guru/tahfiz',       label: 'Tahfizh',            icon: <IconTahfiz /> },
+      { href: '/guru/wafa',         label: 'Wafa',               icon: <IconWafa /> },
+    ],
+  },
 ]
 
 const SESSION_CACHE_KEY = 'simak-guru-session'
@@ -190,7 +197,15 @@ export function GuruShell({
                 </svg>
               </button>
             )}
-            <span className="font-display font-bold text-lg flex-1">SIMAK</span>
+            <div className="flex-1 flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 rounded overflow-hidden flex-shrink-0 bg-white">
+                <img src="/logo.png" alt="SIMAK" className="w-full h-full object-contain" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-display font-bold text-base leading-tight truncate">SIMAK</p>
+                <p className="text-primary-300 text-[9px] leading-tight truncate">SDIT Al-Kautsar Muko-Muko</p>
+              </div>
+            </div>
             <GlobalSearch />
             <button
               onClick={toggleDarkMode}
@@ -242,10 +257,13 @@ function SidebarContent({
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="flex items-center gap-3 px-5 h-16 border-b border-primary-700/50 dark:border-neutral-800 flex-shrink-0">
-        <div className="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center">
-          <span className="text-white font-display font-bold text-sm">S</span>
+        <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-white">
+          <img src="/logo.png" alt="SIMAK" className="w-full h-full object-contain" />
         </div>
-        <span className="font-display font-bold text-xl">SIMAK</span>
+        <div className="flex-1 min-w-0">
+          <p className="font-display font-bold text-xl leading-tight">SIMAK</p>
+          <p className="text-primary-300 dark:text-neutral-400 text-[10px] leading-tight">SDIT Al-Kautsar Muko-Muko</p>
+        </div>
       </div>
 
       {/* Navigation */}
