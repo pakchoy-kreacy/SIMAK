@@ -34,14 +34,26 @@ export async function GET(request: NextRequest) {
       .select('id, nama_kelas, wali_kelas_id')
       .eq('tahun_ajaran_id', tahunAjaran.id)
 
-    // Cari kelas yang wali_kelas_id-nya cocok
     const matchedKelas = (semuaKelas ?? []).filter(k => k.wali_kelas_id === guruId)
 
     if (matchedKelas.length === 0) {
       return NextResponse.json({ siswaList: [], stats: null })
     }
 
-    const kelasIds = matchedKelas.map(k => k.id)
+    // Filter by siswa_kelas (only classes with students)
+    const { data: siswaKelasRows } = await supabase
+      .from('siswa_kelas')
+      .select('kelas_id')
+      .in('kelas_id', matchedKelas.map(k => k.id))
+      .eq('tahun_ajaran_id', tahunAjaran.id)
+    const adaSiswa = new Set(siswaKelasRows?.map(r => r.kelas_id) ?? [])
+    const filteredKelas = matchedKelas.filter(k => adaSiswa.has(k.id))
+
+    if (filteredKelas.length === 0) {
+      return NextResponse.json({ siswaList: [], stats: null })
+    }
+
+    const kelasIds = filteredKelas.map(k => k.id)
 
     // Ambil semua siswa di kelas ini
     const { data: siswaKelas } = await supabase
@@ -151,7 +163,7 @@ export async function GET(request: NextRequest) {
         belumIsi,
         avgPercentage: avgPct,
         tanggal,
-        namaKelas: matchedKelas.map(k => k.nama_kelas).join(', '),
+        namaKelas: filteredKelas.map(k => k.nama_kelas).join(', '),
       },
     })
   } catch (err: unknown) {

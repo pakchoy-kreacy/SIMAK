@@ -18,14 +18,19 @@ export default async function AturMutabaahPage() {
 
   if (!tahunAjaran) return <p className="p-4 text-sm text-neutral-400">Belum ada tahun ajaran aktif</p>
 
-  const { data: semuaKelas } = await supabase
+  // Only show classes teacher is assigned to AND have students
+  const { data: siswaKelasRows } = await supabase
+    .from('siswa_kelas')
+    .select('kelas_id')
+    .eq('tahun_ajaran_id', tahunAjaran.id)
+  const aktifKelasIds = [...new Set(siswaKelasRows?.map(r => r.kelas_id) ?? [])]
+
+  const { data: kelasSaya } = await supabase
     .from('kelas')
     .select('id, nama_kelas')
     .eq('tahun_ajaran_id', tahunAjaran.id)
+    .in('id', aktifKelasIds)
+    .eq('wali_kelas_id', session.userId)
 
-  const kelasSaya = (semuaKelas ?? []).filter(k =>
-    true
-  )
-
-  return <AturMutabaahClient kelasList={kelasSaya} />
+  return <AturMutabaahClient kelasList={kelasSaya ?? []} />
 }
