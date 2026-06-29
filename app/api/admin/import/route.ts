@@ -6,7 +6,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole }               from '@/lib/auth/staff'
-import { createServerClient }        from '@/lib/supabase/server'
+import { createServiceClient }      from '@/lib/supabase/server'
+import { deleteOrphanKelas }         from '@/lib/utils/kelas-cleanup'
 import * as XLSX                     from 'xlsx'
 
 interface SiswaRow {
@@ -20,7 +21,7 @@ interface SiswaRow {
 export async function POST(request: NextRequest) {
   try {
     await requireRole(['admin'])
-    const supabase = await createServerClient()
+    const supabase = createServiceClient()
     const formData = await request.formData()
     const file     = formData.get('file') as File | null
     const tahunId  = formData.get('tahunId') as string | null
@@ -140,9 +141,12 @@ export async function POST(request: NextRequest) {
 
       if (siswaKelasRows.length > 0) {
         const { error: skError } = await supabase.from('siswa_kelas').insert(siswaKelasRows)
-        if (skError) errors.push(`Gagal assign kelas: ${skError.message}`)
+        if (skError) throw skError
       }
     }
+
+    // Hapus kelas yang tidak punya siswa (derived view)
+    await deleteOrphanKelas(supabase)
 
     return NextResponse.json({
       success: true,
@@ -155,6 +159,7 @@ export async function POST(request: NextRequest) {
     if (err instanceof Error && err.message === 'UNAUTHORIZED') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     if (err instanceof Error && err.message === 'FORBIDDEN')    return NextResponse.json({ error: 'Forbidden' },    { status: 403 })
     console.error('POST /api/admin/import:', err)
-    return NextResponse.json({ error: 'Terjadi kesalahan saat import' }, { status: 500 })
+    const message = err instanceof Error ? err.message : 'Terjadi kesalahan saat import'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

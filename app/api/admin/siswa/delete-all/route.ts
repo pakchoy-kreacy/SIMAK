@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireRole }  from '@/lib/auth/staff'
 import { createServiceClient } from '@/lib/supabase/server'
+import { deleteOrphanKelas } from '@/lib/utils/kelas-cleanup'
 
 export async function POST() {
   try {
@@ -26,6 +27,9 @@ export async function POST() {
       .neq('id', '00000000-0000-0000-0000-000000000000')
 
     if (error) throw error
+
+    // Hapus kelas yang tidak punya siswa (derived view)
+    await deleteOrphanKelas(supabase)
 
     return NextResponse.json({ success: true })
   } catch (err: unknown) {

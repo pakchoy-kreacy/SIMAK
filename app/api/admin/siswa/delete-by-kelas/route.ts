@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole }               from '@/lib/auth/staff'
 import { createServiceClient }       from '@/lib/supabase/server'
+import { deleteOrphanKelas }         from '@/lib/utils/kelas-cleanup'
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,33 +17,36 @@ export async function POST(request: NextRequest) {
       .select('siswa_id')
       .eq('kelas_id', kelasId)
 
-    if (!siswaKelas || siswaKelas.length === 0) {
-      return NextResponse.json({ success: true, deleted: 0 })
+    const siswaIds = (siswaKelas ?? []).map(sk => sk.siswa_id)
+
+    if (siswaIds.length > 0) {
+      // Hapus data terkait siswa (parallel)
+      const childResults = await Promise.all([
+        supabase.from('parent_sessions').delete().in('siswa_id', siswaIds),
+        supabase.from('mutabaah_log').delete().in('siswa_id', siswaIds),
+        supabase.from('tahfiz_log').delete().in('siswa_id', siswaIds),
+        supabase.from('wafa_log').delete().in('siswa_id', siswaIds),
+      ])
+
+      const childError = childResults.find(r => r.error)
+      if (childError) throw childError.error
     }
 
-    const siswaIds = siswaKelas.map(sk => sk.siswa_id)
-
-    // Hapus data terkait siswa (parallel)
-    const childResults = await Promise.all([
-      supabase.from('parent_sessions').delete().in('siswa_id', siswaIds),
-      supabase.from('mutabaah_log').delete().in('siswa_id', siswaIds),
-      supabase.from('tahfiz_log').delete().in('siswa_id', siswaIds),
-      supabase.from('wafa_log').delete().in('siswa_id', siswaIds),
-    ])
-
-    const childError = childResults.find(r => r.error)
-    if (childError) throw childError.error
-
-    // Hard delete siswa_kelas
+    // Hard delete siswa_kelas untuk kelas ini
     await supabase.from('siswa_kelas').delete().eq('kelas_id', kelasId)
 
-    // Hard delete siswa
-    const { error } = await supabase
-      .from('siswa')
-      .delete()
-      .in('id', siswaIds)
+    if (siswaIds.length > 0) {
+      // Hard delete siswa
+      const { error } = await supabase
+        .from('siswa')
+        .delete()
+        .in('id', siswaIds)
 
-    if (error) throw error
+      if (error) throw error
+    }
+
+    // Hapus kelas yang tidak punya siswa (derived view)
+    await deleteOrphanKelas(supabase)
 
     return NextResponse.json({ success: true, deleted: siswaIds.length })
   } catch (err: unknown) {
