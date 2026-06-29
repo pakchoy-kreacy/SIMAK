@@ -34,8 +34,18 @@ export default async function TahfizPage() {
     .order('tanggal', { ascending: false })
     .limit(50)
 
+  const { data: siswaData } = await supabase
+    .from('siswa')
+    .select('jenis_kelamin')
+    .eq('id', parentSession.siswaId)
+    .single()
+
   return (
-    <ParentShell siswaName={parentSession.siswaName} siswaId={parentSession.siswaId}>
+    <ParentShell
+      siswaName={parentSession.siswaName}
+      siswaId={parentSession.siswaId}
+      jenisKelamin={(siswaData?.jenis_kelamin as 'L' | 'P' | null) ?? null}
+    >
       <div className="px-4 py-4 max-w-lg mx-auto">
         <div className="mb-4 animate-in">
           <h2 className="text-lg font-bold text-neutral-800">📖 Tahfiz Al-Qur&apos;an</h2>

@@ -21,14 +21,22 @@ const NAV_ITEMS = [
   { href: '/wafa',      label: 'Wafa',     icon: StarIcon },
 ]
 
+const AVATAR_ICON: Record<'L' | 'P' | 'neutral', string> = {
+  L: '👦',
+  P: '👧',
+  neutral: '🧒',
+}
+
 export function ParentShell({
   children,
   siswaName,
   siswaId,
+  jenisKelamin,
 }: {
-  children:  React.ReactNode
-  siswaName: string
-  siswaId:   string
+  children:      React.ReactNode
+  siswaName:     string
+  siswaId:       string
+  jenisKelamin?: 'L' | 'P' | null
 }) {
   const pathname    = usePathname()
   const router      = useRouter()
@@ -94,7 +102,7 @@ export function ParentShell({
             </button>
             <div className='flex items-center gap-2'>
               <div className='w-9 h-9 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0' aria-hidden='true'>
-                <span className='text-lg'>&amp;#x1f466;</span>
+                <span className='text-lg'>{AVATAR_ICON[jenisKelamin ?? 'neutral']}</span>
               </div>
               <div className='text-right'>
                 <p className='text-sm font-bold leading-tight line-clamp-1 max-w-32'>{siswaName}</p>

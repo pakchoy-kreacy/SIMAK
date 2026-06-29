@@ -111,8 +111,9 @@ export function StaffShell({
         if (typeof document !== 'undefined') {
           const cookie = document.cookie.split('; ').find(r => r.startsWith(SESSION_COOKIE + '='))
           if (cookie) {
-            const parsed = JSON.parse(decodeURIComponent(cookie.split('=')[1]))
-            if (parsed.userId && parsed.role && parsed.nama) {
+            const value = cookie.substring(SESSION_COOKIE.length + 1)
+            const parsed = JSON.parse(decodeURIComponent(value))
+            if (parsed.userId && parsed.role && typeof parsed.nama === 'string' && parsed.nama.trim()) {
               const sess = { nama: parsed.nama, role: parsed.role as StaffRole, userId: parsed.userId, email: parsed.email ?? '', roles: (parsed.roles ?? [parsed.role]) as StaffRole[] }
               setSess(sess)
               return
