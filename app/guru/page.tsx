@@ -29,12 +29,19 @@ export default async function GuruPage() {
   if (tahunAktif) {
     const today = new Date().toISOString().split('T')[0]
 
-    // Get assigned classes
+    // Get classes that have students (sync with admin)
+    const { data: siswaKelasRows } = await supabase
+      .from('siswa_kelas')
+      .select('kelas_id')
+      .eq('tahun_ajaran_id', tahunAktif.id)
+    const aktifKelasIds = [...new Set(siswaKelasRows?.map(r => r.kelas_id) ?? [])]
+
     const { data: kelasSaya } = await supabase
       .from('kelas')
       .select('id, nama_kelas')
       .eq('tahun_ajaran_id', tahunAktif.id)
       .eq('wali_kelas_id', session.userId)
+      .in('id', aktifKelasIds)
 
     const kelasList = kelasSaya ?? []
     totalKelas = kelasList.length

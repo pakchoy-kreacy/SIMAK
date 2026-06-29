@@ -80,6 +80,39 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// PATCH: Assign item ke satu atau lebih kelas
+// Body: { assignItemId, kelasIds: string[] }
+export async function PATCH(request: NextRequest) {
+  try {
+    await requireRole(['admin'])
+    const supabase = await createServerClient()
+    const body = await request.json()
+    const { assignItemId, kelasIds } = body as { assignItemId: string; kelasIds: string[] }
+
+    if (!assignItemId || !kelasIds?.length) {
+      return NextResponse.json({ error: 'itemId dan kelasIds wajib diisi' }, { status: 400 })
+    }
+
+    const inserts = kelasIds.map(kelasId => ({
+      mutabaah_item_id: assignItemId,
+      kelas_id: kelasId,
+    }))
+
+    const { error } = await supabase
+      .from('kelas_mutabaah_item')
+      .upsert(inserts, { onConflict: 'mutabaah_item_id,kelas_id' })
+
+    if (error) throw error
+
+    return NextResponse.json({ success: true })
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message === 'UNAUTHORIZED') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (err instanceof Error && err.message === 'FORBIDDEN')    return NextResponse.json({ error: 'Forbidden' },    { status: 403 })
+    console.error('PATCH /api/admin/mutabaah-items error:', err)
+    return NextResponse.json({ error: 'Terjadi kesalahan' }, { status: 500 })
+  }
+}
+
 // DELETE: Unassign kelas dari item mutabaah
 // Body: { itemId, kelasId }
 export async function DELETE(request: NextRequest) {

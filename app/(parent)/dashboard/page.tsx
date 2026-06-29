@@ -84,23 +84,23 @@ export default async function DashboardPage() {
     // Fetch log hari ini
     const { data: logs } = await supabase
       .from('mutabaah_log')
-      .select('item_id, is_checked')
+      .select('item_id, is_checked, catatan')
       .eq('siswa_id', session.siswaId)
-      .eq('tanggal', tanggal)
+      .eq('tanggal', tanggal) as any
 
     const lockedAfter = getLockedAfter(tanggal)
     const isLocked    = new Date() > new Date(lockedAfter)
-    const logMap      = new Map(logs?.map(l => [l.item_id, l.is_checked]) ?? [])
+    const logMap      = new Map((logs as any[])?.map((l: any) => [l.item_id, { is_checked: l.is_checked, catatan: l.catatan }]) ?? [])
 
     const allItems: MutabaahItemWithStatus[] = items.map(item => ({
       id:         item.id,
       nama_item:  item.nama_item,
       urutan:     item.urutan,
-      is_checked: logMap.get(item.id) ?? false,
+      is_checked: logMap.get(item.id)?.is_checked ?? false,
       is_locked:  isLocked,
       parent_id:  item.parent_id,
       tipe:       (item as any).tipe ?? 'checkbox',
-      catatan:    null,
+      catatan:    logMap.get(item.id)?.catatan ?? null,
     }))
 
     // Build hierarchy: parent → children

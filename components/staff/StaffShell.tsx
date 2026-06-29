@@ -68,10 +68,11 @@ const MENU_GROUPS: MenuGroup[] = [
   },
   {
     title: 'Akademik',
+    roles: ['wali_kelas', 'guru_tahfiz', 'guru_wafa'],
     items: [
-      { href: '/tahfiz',     label: 'Tahfizh',   icon: <IconTahfiz />,   roles: ['guru_tahfiz'] },
-      { href: '/wafa',       label: 'Wafa',       icon: <IconWafa />,     roles: ['guru_wafa'] },
-      { href: '/wali-kelas', label: 'Wali Kelas', icon: <IconWaliKelas />, roles: ['wali_kelas'] },
+      { href: '/tahfiz',     label: 'Tahfizh',   icon: <IconTahfiz /> },
+      { href: '/wafa',       label: 'Wafa',       icon: <IconWafa /> },
+      { href: '/wali-kelas', label: 'Wali Kelas', icon: <IconWaliKelas /> },
     ],
   },
 ]
@@ -252,7 +253,15 @@ export function StaffShell({
                 </svg>
               </button>
             )}
-            <span className="font-display font-bold text-lg flex-1">SIMAK</span>
+            <div className="flex-1 flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 rounded overflow-hidden flex-shrink-0 bg-white">
+                <img src="/logo.png" alt="SIMAK" className="w-full h-full object-contain" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-display font-bold text-base leading-tight truncate">SIMAK</p>
+                <p className="text-primary-300 text-[9px] leading-tight truncate">SDIT Al-Kautsar Muko-Muko</p>
+              </div>
+            </div>
             <GlobalSearch />
             <button
               onClick={toggleDarkMode}

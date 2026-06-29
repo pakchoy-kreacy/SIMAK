@@ -6,12 +6,13 @@
 'use client'
 
 import { useQueryClient }       from '@tanstack/react-query'
-import { useEffect, useState }  from 'react'
+import { useEffect }            from 'react'
 import { WeeklyChart, WeeklyChartSkeleton } from '@/components/mutabaah/WeeklyChart'
 import { MonthlyHeatmap }       from '@/components/mutabaah/MonthlyHeatmap'
-import { useTodayMutabaah, useWeeklyMutabaah, useToggleMutabaah } from '@/hooks/useMutabaah'
+import { MutabaahChecklist }    from '@/components/mutabaah/MutabaahChecklist'
+import { useTodayMutabaah, useWeeklyMutabaah } from '@/hooks/useMutabaah'
 import { cn }                   from '@/lib/utils/cn'
-import type { MutabaahDayData, MutabaahItemWithStatus } from '@/lib/types/app'
+import type { MutabaahDayData } from '@/lib/types/app'
 import type { TahfizLog, WafaLog } from '@/lib/types/database'
 
 interface DashboardClientProps {
@@ -70,7 +71,7 @@ export function DashboardClient({
         {mutabaah.items.length === 0 ? (
           <EmptyMutabaah />
         ) : (
-          <MutabaahHarian items={mutabaah.items} percentage={mutabaah.percentage} isLocked={mutabaah.is_locked} tanggal={mutabaah.tanggal} />
+          <MutabaahChecklist items={mutabaah.items} percentage={mutabaah.percentage} isLocked={mutabaah.is_locked} tanggal={mutabaah.tanggal} />
         )}
       </section>
 
@@ -119,189 +120,6 @@ export function DashboardClient({
       {/* Bottom spacer */}
       <div className="h-2" />
     </div>
-  )
-}
-
-// -----------------------------------------------------------
-// MutabaahHarian - Card progres dengan expand/collapse sub-item
-// -----------------------------------------------------------
-function MutabaahHarian({
-  items,
-  percentage,
-  isLocked,
-  tanggal,
-}: {
-  items:     MutabaahItemWithStatus[]
-  percentage: number
-  isLocked:   boolean
-  tanggal:    string
-}) {
-  const [expandedParent, setExpandedParent] = useState<string | null>(null)
-
-  return (
-    <div>
-      {/* Progress bar */}
-      <div className="flex items-center gap-3 mb-4">
-        <div className="flex-1 bg-neutral-100 dark:bg-neutral-700 rounded-full h-2">
-          <div
-            className="bg-primary-500 h-2 rounded-full transition-all duration-500"
-            style={{ width: `${percentage}%` }}
-            role="progressbar"
-            aria-valuenow={percentage}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={`Progres mutabaah ${percentage}%`}
-          />
-        </div>
-        <span className="text-sm font-bold text-primary-500 dark:text-primary-400 flex-shrink-0">{percentage}%</span>
-      </div>
-
-      {/* Items */}
-      <div className="space-y-2">
-        {items.map((item, index) => (
-          <div key={item.id}>
-            {item.children && item.children.length > 0 ? (
-              // Parent item dengan sub-items
-              <div>
-                <button
-                  onClick={() => setExpandedParent(expandedParent === item.id ? null : item.id)}
-                  className={cn(
-                    'w-full flex items-center gap-3 p-3 rounded-lg border transition-all text-left',
-                    'active:scale-[0.98] animate-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
-                    item.is_checked
-                      ? 'bg-primary-50 dark:bg-primary-900 border-primary-200 dark:border-primary-800'
-                      : 'bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700',
-                  )}
-                  style={{ animationDelay: `${index * 0.03}s` }}
-                  aria-expanded={expandedParent === item.id}
-                  aria-label={item.nama_item + " - selesai"}
-                >
-                  <div className={cn(
-                    'w-7 h-7 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all',
-                    item.is_checked
-                      ? 'bg-primary-500 border-primary-500'
-                      : 'border-neutral-300 dark:border-neutral-500 bg-white dark:bg-neutral-700',
-                  )}>
-                    {item.is_checked ? (
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                        <path d="M2.5 7L5.5 10L11.5 4" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    ) : null}
-                  </div>
-
-                  <span className={cn(
-                    'text-sm font-medium flex-1',
-                    item.is_checked ? 'text-primary-700 dark:text-primary-300' : 'text-neutral-700 dark:text-neutral-300'
-                  )}>
-                    {item.nama_item}
-                  </span>
-
-                  <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                    {item.children.filter(c => c.is_checked).length}/{item.children.length}
-                  </span>
-
-                  <svg
-                    width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-                    className={cn('transition-transform', expandedParent === item.id ? 'rotate-180' : '')}
-                    aria-hidden="true"
-                  >
-                    <path d="M6 9l6 6 6-6" />
-                  </svg>
-                </button>
-
-                {/* Child items */}
-                {expandedParent === item.id && (
-                  <div className="ml-6 mt-2 space-y-1.5">
-                    {item.children.map((child, ci) => (
-                      <ItemCheckbox
-                        key={child.id}
-                        item={child}
-                        isLocked={isLocked}
-                        isSaving={false}
-                        onToggle={() => {}}
-                        index={ci}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              // Item tunggal (tanpa children)
-              <ItemCheckbox
-                item={item}
-                isLocked={isLocked}
-                isSaving={false}
-                onToggle={() => {}}
-                index={index}
-              />
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// -----------------------------------------------------------
-// ItemCheckbox - Item mutabaah tunggal dengan toggle
-// -----------------------------------------------------------
-function ItemCheckbox({
-  item,
-  isLocked,
-  isSaving,
-  onToggle,
-  index,
-}: {
-  item:     MutabaahItemWithStatus
-  isLocked: boolean
-  isSaving: boolean
-  onToggle: () => void
-  index:    number
-}) {
-  return (
-    <button
-      onClick={onToggle}
-      disabled={isLocked || isSaving}
-      className={cn(
-        'w-full flex items-center gap-3 p-3.5 rounded-lg border transition-all text-left',
-        'active:scale-[0.98] animate-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
-        item.is_checked
-          ? 'bg-primary-50 dark:bg-primary-900 border-primary-200 dark:border-primary-800'
-          : 'bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700',
-        isLocked && 'opacity-70 cursor-default'
-      )}
-      style={{ animationDelay: `${index * 0.03}s` }}
-      aria-label={item.nama_item}
-    >
-      <div className={cn(
-        'w-7 h-7 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all',
-        item.is_checked
-          ? 'bg-primary-500 border-primary-500'
-          : 'border-neutral-300 dark:border-neutral-500 bg-white dark:bg-neutral-700',
-        isSaving && 'opacity-50'
-      )}>
-        {isSaving ? (
-          <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" role="status" aria-label="Menyimpan" />
-        ) : item.is_checked ? (
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-            <path d="M2.5 7L5.5 10L11.5 4" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        ) : null}
-      </div>
-
-      <span className={cn(
-        'text-sm font-medium flex-1',
-        item.is_checked ? 'text-primary-700 dark:text-primary-300' : 'text-neutral-700 dark:text-neutral-300'
-      )}>
-        {item.nama_item}
-      </span>
-
-      {item.is_checked && (
-        <span className="text-xs text-primary-500 dark:text-primary-400 font-semibold bg-primary-100 dark:bg-primary-900 px-2 py-0.5 rounded-full">
-          OK
-        </span>
-      )}
-    </button>
   )
 }
 
