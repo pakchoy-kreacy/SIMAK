@@ -139,7 +139,8 @@ export async function POST(request: NextRequest) {
       }
 
       if (siswaKelasRows.length > 0) {
-        await supabase.from('siswa_kelas').insert(siswaKelasRows)
+        const { error: skError } = await supabase.from('siswa_kelas').insert(siswaKelasRows)
+        if (skError) errors.push(`Gagal assign kelas: ${skError.message}`)
       }
     }
 

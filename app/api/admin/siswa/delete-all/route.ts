@@ -7,7 +7,11 @@ export async function POST() {
     await requireRole(['admin'])
     const supabase = createServiceClient()
 
-    // Hard delete — hapus dari siswa_kelas dulu (foreign key)
+    // Hapus semua data terkait siswa (child tables dulu — foreign key cascade)
+    await supabase.from('parent_sessions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+    await supabase.from('mutabaah_log').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+    await supabase.from('tahfiz_log').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+    await supabase.from('wafa_log').delete().neq('id', '00000000-0000-0000-0000-000000000000')
     await supabase.from('siswa_kelas').delete().neq('id', '00000000-0000-0000-0000-000000000000')
 
     // Hard delete semua siswa
