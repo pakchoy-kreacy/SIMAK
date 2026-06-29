@@ -7,12 +7,17 @@ export async function POST() {
     await requireRole(['admin'])
     const supabase = createServiceClient()
 
-    // Hapus semua data terkait siswa (child tables dulu — foreign key cascade)
-    await supabase.from('parent_sessions').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-    await supabase.from('mutabaah_log').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-    await supabase.from('tahfiz_log').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-    await supabase.from('wafa_log').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-    await supabase.from('siswa_kelas').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+    // Hapus semua data terkait siswa (parallel — child tables dulu)
+    const childResults = await Promise.all([
+      supabase.from('parent_sessions').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+      supabase.from('mutabaah_log').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+      supabase.from('tahfiz_log').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+      supabase.from('wafa_log').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+      supabase.from('siswa_kelas').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+    ])
+
+    const childError = childResults.find(r => r.error)
+    if (childError) throw childError.error
 
     // Hard delete semua siswa
     const { error } = await supabase

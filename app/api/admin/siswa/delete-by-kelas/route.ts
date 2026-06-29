@@ -22,11 +22,16 @@ export async function POST(request: NextRequest) {
 
     const siswaIds = siswaKelas.map(sk => sk.siswa_id)
 
-    // Hapus data terkait siswa (child tables dulu)
-    await supabase.from('parent_sessions').delete().in('siswa_id', siswaIds)
-    await supabase.from('mutabaah_log').delete().in('siswa_id', siswaIds)
-    await supabase.from('tahfiz_log').delete().in('siswa_id', siswaIds)
-    await supabase.from('wafa_log').delete().in('siswa_id', siswaIds)
+    // Hapus data terkait siswa (parallel)
+    const childResults = await Promise.all([
+      supabase.from('parent_sessions').delete().in('siswa_id', siswaIds),
+      supabase.from('mutabaah_log').delete().in('siswa_id', siswaIds),
+      supabase.from('tahfiz_log').delete().in('siswa_id', siswaIds),
+      supabase.from('wafa_log').delete().in('siswa_id', siswaIds),
+    ])
+
+    const childError = childResults.find(r => r.error)
+    if (childError) throw childError.error
 
     // Hard delete siswa_kelas
     await supabase.from('siswa_kelas').delete().eq('kelas_id', kelasId)
