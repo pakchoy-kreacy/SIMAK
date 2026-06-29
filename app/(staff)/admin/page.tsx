@@ -21,39 +21,31 @@ export default async function AdminPage() {
     { count: totalStaff },
     { data: tahunAktifData },
     { count: totalKelas },
-    { count: mutabaahHariIni },
     { count: tahfizHariIni },
     { count: wafaHariIni },
     { data: recentMutabaah },
     { data: recentTahfiz },
     { data: recentWafa },
     { data: kelasListRaw },
+    { data: allMutabaahToday },
+    { data: allSiswaKelas },
   ] = await Promise.all([
     supabase.from('siswa').select('*', { count: 'exact', head: true }).eq('is_active', true),
     supabase.from('user_profile').select('*', { count: 'exact', head: true }).eq('is_active', true),
     supabase.from('tahun_ajaran').select('id, nama').eq('is_active', true).maybeSingle(),
     supabase.from('kelas').select('*', { count: 'exact', head: true }),
-    supabase.from('mutabaah_log').select('*', { count: 'exact', head: true }).eq('tanggal', today),
     supabase.from('tahfiz_log').select('*', { count: 'exact', head: true }).eq('tanggal', today),
     supabase.from('wafa_log').select('*', { count: 'exact', head: true }).eq('tanggal', today),
     supabase.from('mutabaah_log').select('id, created_at, siswa:siswa_id(nama_lengkap)').order('created_at', { ascending: false }).limit(5),
     supabase.from('tahfiz_log').select('id, created_at, siswa:siswa_id(nama_lengkap)').order('created_at', { ascending: false }).limit(5),
     supabase.from('wafa_log').select('id, created_at, siswa:siswa_id(nama_lengkap)').order('created_at', { ascending: false }).limit(5),
     supabase.from('kelas').select('id, nama_kelas'),
+    supabase.from('mutabaah_log').select('siswa_id').eq('tanggal', today),
+    supabase.from('siswa_kelas').select('kelas_id, siswa_id'),
   ])
 
   const tahunAktif = tahunAktifData?.nama ?? 'Belum ada'
   const kelasData = kelasListRaw ?? []
-
-  // OPTIMIZED: 3 batch queries instead of N+1 per kelas
-  const { data: allSiswaKelas } = await supabase
-    .from('siswa_kelas')
-    .select('kelas_id, siswa_id')
-
-  const { data: allMutabaahToday } = await supabase
-    .from('mutabaah_log')
-    .select('siswa_id')
-    .eq('tanggal', today)
 
   // Build lookup maps
   const siswaPerKelas = new Map()
@@ -88,7 +80,7 @@ export default async function AdminPage() {
         totalStaff:     totalStaff ?? 0,
         totalKelas:     totalKelas ?? 0,
         tahunAktif,
-        mutabaahHariIni: mutabaahHariIni ?? 0,
+        mutabaahHariIni: allMutabaahToday?.length ?? 0,
         tahfizHariIni:  tahfizHariIni ?? 0,
         wafaHariIni:    wafaHariIni ?? 0,
         totalSiswaAktif: totalSiswa ?? 0,

@@ -5,7 +5,8 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState }            from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useToast }            from '@/components/ui/Toast'
 import { Breadcrumb }          from '@/components/ui/Breadcrumb'
 import { cn }                  from '@/lib/utils/cn'
@@ -28,13 +29,10 @@ interface TahunItem { id: string; nama: string; is_active: boolean }
 interface StaffItem { id: string; nama: string; role: string }
 
 export default function AdminKelasPage() {
-  const [kelasList,   setKelasList]   = useState<KelasRow[]>([])
-  const [tahunList,   setTahunList]   = useState<TahunItem[]>([])
-  const [staffList,   setStaffList]   = useState<StaffItem[]>([])
+  const queryClient = useQueryClient()
   const [selectedTahun, setSelectedTahun] = useState('')
   const [showForm,    setShowForm]    = useState(false)
   const [editKelas,   setEditKelas]   = useState<KelasRow | null>(null)
-  const [isLoading,   setIsLoading]   = useState(true)
   const [confirmDel,  setConfirmDel]  = useState<string | null>(null)
   const { showToast, ToastComponent } = useToast()
 
@@ -44,29 +42,40 @@ export default function AdminKelasPage() {
   const [formWali,    setFormWali]    = useState('')
   const [formLoading, setFormLoading] = useState(false)
 
-  async function fetchData() {
-    setIsLoading(true)
-    const [kRes, tRes, sRes] = await Promise.all([
-      fetch(`/api/admin/kelas${selectedTahun ? `?tahunId=${selectedTahun}` : ''}`),
-      fetch('/api/admin/tahun-ajaran'),
-      fetch('/api/admin/staff'),
-    ])
-    const [kData, tData, sData] = await Promise.all([kRes.json(), tRes.json(), sRes.json()])
-    setKelasList(Array.isArray(kData) ? kData : [])
-    setTahunList(Array.isArray(tData) ? tData : [])
-    setStaffList(Array.isArray(sData) ? sData.filter((s: any) => s.is_active) : [])
-    if (!selectedTahun && tData.length > 0) {
-      const aktif = tData.find((t: any) => t.is_active)
-      setSelectedTahun(aktif?.id ?? tData[0]?.id ?? '')
-      setFormTahun(aktif?.id ?? tData[0]?.id ?? '')
-    }
-    setIsLoading(false)
-  }
+  const { data: tahunList = [], isLoading: tahunLoading } = useQuery<TahunItem[]>({
+    queryKey: ['tahun-ajaran'],
+    queryFn: async () => { const r = await fetch('/api/admin/tahun-ajaran'); return r.json() },
+    staleTime: 60000,
+  })
 
-  useEffect(() => { 
-    if (!selectedTahun) return
-    fetchData() 
-  }, [selectedTahun])
+  const { data: rawStaff = [] } = useQuery<StaffItem[]>({
+    queryKey: ['staff'],
+    queryFn: async () => { const r = await fetch('/api/admin/staff'); return r.json() },
+    staleTime: 60000,
+  })
+
+  const staffList = Array.isArray(rawStaff) ? rawStaff.filter((s: any) => s.is_active) : []
+
+  const { data: kelasList = [], isLoading: kelasLoading } = useQuery<KelasRow[]>({
+    queryKey: ['kelas', selectedTahun],
+    queryFn: async () => {
+      const r = await fetch(`/api/admin/kelas${selectedTahun ? `?tahunId=${selectedTahun}` : ''}`)
+      return r.json()
+    },
+    staleTime: 30000,
+    enabled: !!selectedTahun,
+  })
+
+  const isLoading = tahunLoading || kelasLoading || !selectedTahun
+
+  // Set initial selected tahun once list loads
+  const [initialSet, setInitialSet] = useState(false)
+  if (!initialSet && tahunList.length > 0 && !selectedTahun) {
+    const aktif = tahunList.find((t: any) => t.is_active)
+    setSelectedTahun(aktif?.id ?? tahunList[0]?.id ?? '')
+    setFormTahun(aktif?.id ?? tahunList[0]?.id ?? '')
+    setInitialSet(true)
+  }
 
   function openAddForm() {
     setEditKelas(null)
@@ -94,7 +103,7 @@ export default function AdminKelasPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ namaKelas: formNama, waliKelasId: formWali || null }),
       })
-      if (res.ok) { showToast('Kelas diperbarui', 'success'); setShowForm(false); fetchData() }
+      if (res.ok) { showToast('Kelas diperbarui', 'success'); setShowForm(false); queryClient.invalidateQueries({ queryKey: ['kelas'] }) }
       else { const d = await res.json(); showToast(d.error ?? 'Gagal', 'error') }
     } else {
       const res = await fetch('/api/admin/kelas', {
@@ -102,7 +111,7 @@ export default function AdminKelasPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ namaKelas: formNama, tahunAjaranId: formTahun, waliKelasId: formWali || null }),
       })
-      if (res.ok) { showToast('Kelas ditambahkan', 'success'); setShowForm(false); fetchData() }
+      if (res.ok) { showToast('Kelas ditambahkan', 'success'); setShowForm(false); queryClient.invalidateQueries({ queryKey: ['kelas'] }) }
       else { const d = await res.json(); showToast(d.error ?? 'Gagal', 'error') }
     }
     setFormLoading(false)
@@ -110,7 +119,7 @@ export default function AdminKelasPage() {
 
   async function handleDelete(id: string) {
     const res = await fetch(`/api/admin/kelas/${id}`, { method: 'DELETE' })
-    if (res.ok) { showToast('Kelas dihapus', 'success'); setConfirmDel(null); fetchData() }
+    if (res.ok) { showToast('Kelas dihapus', 'success'); setConfirmDel(null); queryClient.invalidateQueries({ queryKey: ['kelas'] }) }
     else { const d = await res.json(); showToast(d.error ?? 'Gagal menghapus', 'error') }
   }
 

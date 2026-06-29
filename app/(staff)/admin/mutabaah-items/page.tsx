@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo }   from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useToast }            from '@/components/ui/Toast'
 import { Breadcrumb }          from '@/components/ui/Breadcrumb'
 import { cn }                  from '@/lib/utils/cn'
@@ -21,10 +22,9 @@ interface ItemRow {
 interface TahunItem { id: string; nama: string; is_active: boolean }
 
 export default function AdminMutabaahItemsPage() {
-  const [items,       setItems]       = useState<ItemRow[]>([])
-  const [tahunList,   setTahunList]   = useState<TahunItem[]>([])
+  const queryClient = useQueryClient()
   const [selectedTahun, setSelectedTahun] = useState('')
-  const [isLoading,   setIsLoading]   = useState(true)
+  const { showToast, ToastComponent } = useToast()
 
   // Modal Tambah/Edit Item Utama
   const [showMainForm, setShowMainForm] = useState(false)
@@ -46,7 +46,6 @@ export default function AdminMutabaahItemsPage() {
   const [formLoad,   setFormLoad]   = useState(false)
   const [confirmDel, setConfirmDel] = useState<string | null>(null)
   const [confirmHapus, setConfirmHapus] = useState<string | null>(null)
-  const { showToast, ToastComponent } = useToast()
 
   // Collapse state per parent
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set())
@@ -60,26 +59,29 @@ export default function AdminMutabaahItemsPage() {
     })
   }
 
-  async function fetchData() {
-    setIsLoading(true)
-    const [iRes, tRes] = await Promise.all([
-      fetch(`/api/admin/mutabaah-items${selectedTahun ? `?tahunId=${selectedTahun}` : ''}`),
-      fetch('/api/admin/tahun-ajaran'),
-    ])
-    const [iData, tData] = await Promise.all([iRes.json(), tRes.json()])
-    setItems(Array.isArray(iData) ? iData : [])
-    setTahunList(Array.isArray(tData) ? tData : [])
-    if (!selectedTahun && tData.length > 0) {
-      const aktif = tData.find((t: any) => t.is_active)
-      setSelectedTahun(aktif?.id ?? tData[0]?.id ?? '')
-    }
-    setIsLoading(false)
-  }
+  const { data: tahunList = [] } = useQuery<TahunItem[]>({
+    queryKey: ['tahun-ajaran'],
+    queryFn: async () => { const r = await fetch('/api/admin/tahun-ajaran'); return r.json() },
+    staleTime: 60000,
+  })
 
-  useEffect(() => { 
-    if (!selectedTahun) return
-    fetchData() 
-  }, [selectedTahun])
+  const { data: items = [], isLoading } = useQuery<ItemRow[]>({
+    queryKey: ['mutabaah-items', selectedTahun],
+    queryFn: async () => {
+      const r = await fetch(`/api/admin/mutabaah-items${selectedTahun ? `?tahunId=${selectedTahun}` : ''}`)
+      return r.json()
+    },
+    staleTime: 30000,
+    enabled: !!selectedTahun,
+  })
+
+  // Set initial selected tahun once list loads
+  const [initialSet, setInitialSet] = useState(false)
+  if (!initialSet && tahunList.length > 0 && !selectedTahun) {
+    const aktif = tahunList.find((t: any) => t.is_active)
+    setSelectedTahun(aktif?.id ?? tahunList[0]?.id ?? '')
+    setInitialSet(true)
+  }
 
   const groupedItems = useMemo(() => {
     const parents = items.filter(i => !i.parent_id && i.is_active)
@@ -131,7 +133,7 @@ export default function AdminMutabaahItemsPage() {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ namaItem: formNama }),
       })
-      if (res.ok) { showToast('Item diperbarui', 'success'); setShowMainForm(false); fetchData() }
+      if (res.ok) { showToast('Item diperbarui', 'success'); setShowMainForm(false); queryClient.invalidateQueries({ queryKey: ['mutabaah-items'] }) }
       else { const d = await res.json(); showToast(d.error ?? 'Gagal', 'error') }
       setFormLoad(false)
       return
@@ -155,7 +157,7 @@ export default function AdminMutabaahItemsPage() {
       const data = await res.json()
       showToast(data.message || 'Item ditambahkan', 'success')
       setShowMainForm(false)
-      fetchData()
+      queryClient.invalidateQueries({ queryKey: ['mutabaah-items'] })
     } else {
       const d = await res.json()
       showToast(d.error ?? 'Gagal', 'error')
@@ -177,7 +179,7 @@ export default function AdminMutabaahItemsPage() {
     if (res.ok) {
       showToast('Sub item ditambahkan', 'success')
       setShowSubForm(false)
-      fetchData()
+      queryClient.invalidateQueries({ queryKey: ['mutabaah-items'] })
     } else {
       const d = await res.json()
       showToast(d.error ?? 'Gagal', 'error')
@@ -201,7 +203,7 @@ export default function AdminMutabaahItemsPage() {
     if (res.ok) {
       showToast('Item berhasil dipindahkan', 'success')
       setShowMoveModal(false)
-      fetchData()
+      queryClient.invalidateQueries({ queryKey: ['mutabaah-items'] })
     } else {
       const d = await res.json()
       showToast(d.error ?? 'Gagal memindahkan', 'error')
@@ -211,13 +213,13 @@ export default function AdminMutabaahItemsPage() {
 
   async function handleDelete(id: string) {
     const res = await fetch(`/api/admin/mutabaah-items/${id}`, { method: 'DELETE' })
-    if (res.ok) { showToast('Item diarsipkan', 'success'); setConfirmDel(null); fetchData() }
+    if (res.ok) { showToast('Item diarsipkan', 'success'); setConfirmDel(null); queryClient.invalidateQueries({ queryKey: ['mutabaah-items'] }) }
     else showToast('Gagal', 'error')
   }
 
   async function handleHapus(id: string) {
     const res = await fetch(`/api/admin/mutabaah-items/${id}?permanent=true`, { method: 'DELETE' })
-    if (res.ok) { showToast('Item dihapus permanen', 'success'); setConfirmHapus(null); fetchData() }
+    if (res.ok) { showToast('Item dihapus permanen', 'success'); setConfirmHapus(null); queryClient.invalidateQueries({ queryKey: ['mutabaah-items'] }) }
     else { const d = await res.json(); showToast(d.error ?? 'Gagal', 'error') }
   }
 
@@ -229,7 +231,7 @@ export default function AdminMutabaahItemsPage() {
     })
     if (res.ok) {
       showToast(`Lepas dari ${kelasNama} berhasil`, 'success')
-      fetchData()
+      queryClient.invalidateQueries({ queryKey: ['mutabaah-items'] })
     } else {
       const d = await res.json()
       showToast(d.error ?? 'Gagal', 'error')

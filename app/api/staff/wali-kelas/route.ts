@@ -26,14 +26,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ siswaList: [], stats: null })
     }
 
-    // Cari profile guru untuk memastikan ID konsisten
-    const { data: profileSelf } = await supabase
-      .from('user_profile')
-      .select('id')
-      .eq('id', session.userId)
-      .single()
-
-    const guruId = profileSelf?.id ?? session.userId
+    const guruId = session.userId
 
     // Ambil semua kelas di tahun ajaran ini
     const { data: semuaKelas } = await supabase

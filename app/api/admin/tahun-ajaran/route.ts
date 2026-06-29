@@ -18,23 +18,31 @@ export async function GET() {
       .order('nama', { ascending: false })
     if (error) throw error
 
-    // Add stats per tahun ajaran
-    const result = await Promise.all((data ?? []).map(async (t) => {
-      const [
-        { count: kelasCount },
-        { data: skData },
-        { count: guruCount },
-      ] = await Promise.all([
-        supabase.from('kelas').select('*', { count: 'exact', head: true }).eq('tahun_ajaran_id', t.id),
-        supabase.from('siswa_kelas').select('siswa_id').eq('tahun_ajaran_id', t.id),
-        supabase.from('user_profile').select('*', { count: 'exact', head: true }).eq('is_active', true),
-      ])
-      return {
-        ...t,
-        jumlah_kelas: kelasCount ?? 0,
-        jumlah_siswa: new Set((skData ?? []).map((r: any) => r.siswa_id)).size,
-        jumlah_guru: guruCount ?? 0,
-      }
+    // Batch stats: 3 queries total instead of N×3 (N+1 fix)
+    const tahunIds = (data ?? []).map(t => t.id)
+    const [{ data: allKelas }, { data: allSiswaKelas }, { count: totalGuru }] = await Promise.all([
+      supabase.from('kelas').select('id, tahun_ajaran_id'),
+      supabase.from('siswa_kelas').select('siswa_id, tahun_ajaran_id').in('tahun_ajaran_id', tahunIds),
+      supabase.from('user_profile').select('*', { count: 'exact', head: true }).eq('is_active', true),
+    ])
+
+    // Group by tahun_ajaran_id in-memory
+    const kelasByTahun = new Map<string, number>()
+    for (const k of allKelas ?? []) {
+      kelasByTahun.set(k.tahun_ajaran_id, (kelasByTahun.get(k.tahun_ajaran_id) ?? 0) + 1)
+    }
+
+    const siswaByTahun = new Map<string, Set<string>>()
+    for (const sk of allSiswaKelas ?? []) {
+      if (!siswaByTahun.has(sk.tahun_ajaran_id)) siswaByTahun.set(sk.tahun_ajaran_id, new Set())
+      siswaByTahun.get(sk.tahun_ajaran_id)!.add(sk.siswa_id)
+    }
+
+    const result = (data ?? []).map(t => ({
+      ...t,
+      jumlah_kelas: kelasByTahun.get(t.id) ?? 0,
+      jumlah_siswa: siswaByTahun.get(t.id)?.size ?? 0,
+      jumlah_guru: totalGuru ?? 0,
     }))
 
     return NextResponse.json(result)

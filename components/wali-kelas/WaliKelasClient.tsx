@@ -39,7 +39,7 @@ const STATUS_CONFIG = {
   sebagian: { label: 'Sebagian', color: 'text-warning',  bg: 'bg-amber-50', border: 'border-amber-200',  icon: '⚠️' },
   belum:    { label: 'Belum',    color: 'text-danger',   bg: 'bg-red-50',   border: 'border-red-200',    icon: '❌' },
 }
-async function fetchWithRetry(url: string, options: RequestInit = {}, maxRetries = 3) {
+async function fetchWithRetry(url: string, options: RequestInit = {}, maxRetries = 2) {
   for (let i = 0; i < maxRetries; i++) {
     try {
       const res = await fetch(url, options)
@@ -47,7 +47,7 @@ async function fetchWithRetry(url: string, options: RequestInit = {}, maxRetries
       return res
     } catch (err) {
       if (i === maxRetries - 1) throw err
-      await new Promise(r => setTimeout(r, 1000 * (i + 1))) // exponential backoff
+      await new Promise(r => setTimeout(r, 500 * (i + 1)))
     }
   }
   throw new Error('Max retries reached')
