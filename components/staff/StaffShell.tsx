@@ -24,6 +24,7 @@ const ROLE_COLOR: Record<StaffRole, string> = {
 }
 
 const SESSION_CACHE_KEY = 'simak-staff-session'
+const SESSION_COOKIE = 'simak-session'
 
 interface MenuItem {
   href:    string
@@ -95,35 +96,56 @@ export function StaffShell({
   useEffect(() => {
     let cancelled = false
 
+    function setSess(sess: { nama: string; role: StaffRole; userId: string; email: string; roles: StaffRole[] }) {
+      if (cancelled) return
+      setSession(sess)
+      setLoading(false)
+      try {
+        sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(sess))
+      } catch {}
+    }
+
     async function loadSession() {
-      // 1. Try sessionStorage cache first (instant)
+      // 1. Cookie (fastest — set by middleware)
+      try {
+        if (typeof document !== 'undefined') {
+          const cookie = document.cookie.split('; ').find(r => r.startsWith(SESSION_COOKIE + '='))
+          if (cookie) {
+            const parsed = JSON.parse(decodeURIComponent(cookie.split('=')[1]))
+            if (parsed.userId && parsed.role && parsed.nama) {
+              const sess = { nama: parsed.nama, role: parsed.role as StaffRole, userId: parsed.userId, email: parsed.email ?? '', roles: (parsed.roles ?? [parsed.role]) as StaffRole[] }
+              setSess(sess)
+              return
+            }
+          }
+        }
+      } catch {}
+
+      // 2. sessionStorage cache
       try {
         const cached = sessionStorage.getItem(SESSION_CACHE_KEY)
         if (cached) {
           const parsed = JSON.parse(cached)
-          if (!cancelled) {
-            setSession(parsed)
-            setLoading(false)
+          if (parsed.userId && parsed.role && parsed.nama) {
+            setSess(parsed)
+            return
           }
-          return
         }
       } catch {}
 
-      // 2. Fetch from API (one-time only)
+      // 3. API fallback
       try {
         const res = await fetch('/api/auth/session')
         if (res.ok) {
           const data = await res.json()
-          if (!cancelled) {
-            setSession({ nama: data.nama, role: data.role, userId: data.userId ?? '', email: data.email ?? '', roles: data.roles ?? [data.role] })
-            sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify({ nama: data.nama, role: data.role, userId: data.userId ?? '', email: data.email ?? '', roles: data.roles ?? [data.role] }))
-          }
+          const sess = { nama: data.nama, role: data.role as StaffRole, userId: data.userId ?? '', email: data.email ?? '', roles: (data.roles ?? [data.role]) as StaffRole[] }
+          setSess(sess)
         } else {
           router.push('/login')
+          if (!cancelled) setLoading(false)
         }
       } catch {
         router.push('/login')
-      } finally {
         if (!cancelled) setLoading(false)
       }
     }

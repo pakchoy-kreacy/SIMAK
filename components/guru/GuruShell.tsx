@@ -29,6 +29,7 @@ const MENU_GROUPS = [
 ]
 
 const SESSION_CACHE_KEY = 'simak-guru-session'
+const SESSION_COOKIE = 'simak-session'
 
 export function GuruShell({
   children,
@@ -48,34 +49,56 @@ export function GuruShell({
   useEffect(() => {
     let cancelled = false
 
+    function setSess(sess: SessionData) {
+      if (cancelled) return
+      setSession(sess)
+      setLoading(false)
+      try {
+        sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(sess))
+      } catch {}
+    }
+
     async function loadSession() {
+      // 1. Cookie (fastest — set by middleware)
+      try {
+        if (typeof document !== 'undefined') {
+          const cookie = document.cookie.split('; ').find(r => r.startsWith(SESSION_COOKIE + '='))
+          if (cookie) {
+            const parsed = JSON.parse(decodeURIComponent(cookie.split('=')[1]))
+            if (parsed.userId && parsed.role && parsed.nama) {
+              const sess = { nama: parsed.nama, role: parsed.role, userId: parsed.userId, email: parsed.email ?? '', roles: parsed.roles ?? [parsed.role] }
+              setSess(sess)
+              return
+            }
+          }
+        }
+      } catch {}
+
+      // 2. sessionStorage cache
       try {
         const cached = sessionStorage.getItem(SESSION_CACHE_KEY)
         if (cached) {
           const parsed = JSON.parse(cached)
-          if (!cancelled) {
-            setSession(parsed)
-            setLoading(false)
+          if (parsed.userId && parsed.role && parsed.nama) {
+            setSess(parsed)
+            return
           }
-          return
         }
       } catch {}
 
+      // 3. API fallback
       try {
         const res = await fetch('/api/auth/session')
         if (res.ok) {
           const data = await res.json()
-          if (!cancelled) {
-            const sess = { nama: data.nama, role: data.role, userId: data.userId, email: data.email, roles: data.roles }
-            setSession(sess)
-            sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(sess))
-          }
+          const sess = { nama: data.nama, role: data.role, userId: data.userId, email: data.email ?? '', roles: data.roles ?? [data.role] }
+          setSess(sess)
         } else {
           router.push('/login')
+          if (!cancelled) setLoading(false)
         }
       } catch {
         router.push('/login')
-      } finally {
         if (!cancelled) setLoading(false)
       }
     }
