@@ -15,12 +15,8 @@ export default async function LoginPage() {
 
   const staffSession = await getStaffSession()
   if (staffSession) {
-    switch (staffSession.role) {
-      case 'wali_kelas':  redirect('/wali-kelas')
-      case 'guru_tahfiz': redirect('/tahfiz')
-      case 'guru_wafa':   redirect('/wafa')
-      case 'admin':       redirect('/admin')
-    }
+    if (staffSession.role === 'admin') redirect('/admin')
+    redirect('/guru')
   }
 
   return <LoginForm />

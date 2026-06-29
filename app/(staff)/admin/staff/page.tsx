@@ -65,7 +65,7 @@ export default function AdminStaffPage() {
 
   function openEditForm(staff: StaffRow) {
     setEditStaff(staff)
-    setFormNama(staff.nama); setFormRole(staff.role); setFormEmail(''); setFormPassword(''); setFormError('')
+    setFormNama(staff.nama); setFormRole(staff.role === 'admin' ? 'admin' : 'wali_kelas'); setFormEmail(''); setFormPassword(''); setFormError('')
     setShowForm(true)
   }
 
@@ -211,23 +211,21 @@ export default function AdminStaffPage() {
               {!editStaff && (
                 <div>
                   <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Email <span className="text-danger">*</span></label>
-                  <input type="email" value={formEmail} onChange={e => setFormEmail(e.target.value)} placeholder="guru@sditalkautsar.sch.id" className="w-full h-11 px-4 border border-neutral-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-300" required />
+                  <input type="email" value={formEmail} onChange={e => setFormEmail(e.target.value)} placeholder="guru4@sch.id" className="w-full h-11 px-4 border border-neutral-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-300" required />
                 </div>
               )}
 
               <div>
                 <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Nama Lengkap <span className="text-danger">*</span></label>
-                <input type="text" value={formNama} onChange={e => setFormNama(e.target.value)} placeholder="Guru Kelas 4.1 - Ustadzah Nurul" className="w-full h-11 px-4 border border-neutral-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-300" required />
-                <p className="text-[11px] text-neutral-400 mt-1">Gunakan format: <strong>Guru Kelas [nama kelas]</strong> agar mudah dikenali saat penugasan</p>
+                <input type="text" value={formNama} onChange={e => setFormNama(e.target.value)} placeholder="Guru Kelas 4" className="w-full h-11 px-4 border border-neutral-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-300" required />
+                <p className="text-[11px] text-neutral-400 mt-1">Format: <strong>Guru Kelas [nama kelas]</strong></p>
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Role <span className="text-danger">*</span></label>
                 <select value={formRole} onChange={e => setFormRole(e.target.value)} className="w-full h-11 px-3 border border-neutral-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-300">
-                  <option value="wali_kelas">Wali Kelas - Pemantau mutabaah siswa per kelas</option>
-                  <option value="guru_tahfiz">Guru Tahfiz - Pencatat setoran hafalan Al-Qur'an</option>
-                  <option value="guru_wafa">Guru Wafa - Pencatat pelajaran Wafa</option>
                   <option value="admin">Admin - Administrator penuh</option>
+                  <option value="wali_kelas">Wali Kelas, Guru Tahfiz, Guru Wafa</option>
                 </select>
               </div>
 

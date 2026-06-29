@@ -6,43 +6,40 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireRole }               from '@/lib/auth/staff'
-import { createServerClient }        from '@/lib/supabase/server'
+import { createServiceClient }      from '@/lib/supabase/server'
 
 export async function GET() {
   try {
     await requireRole(['admin'])
-    const supabase = await createServerClient()
+    const supabase = createServiceClient()
     const { data, error } = await supabase
       .from('tahun_ajaran')
       .select('*')
       .order('nama', { ascending: false })
     if (error) throw error
 
-    // Batch stats: 3 queries total instead of N×3 (N+1 fix)
+    // Batch stats: kelas & siswa dihitung dari siswa_kelas (data utama = siswa)
     const tahunIds = (data ?? []).map(t => t.id)
     if (tahunIds.length === 0) return NextResponse.json(data ?? [])
 
-    const [{ data: allKelas }, { data: allSiswaKelas }, { count: totalGuru }] = await Promise.all([
-      supabase.from('kelas').select('id, tahun_ajaran_id'),
-      supabase.from('siswa_kelas').select('siswa_id, tahun_ajaran_id').in('tahun_ajaran_id', tahunIds),
+    const [{ data: allSiswaKelas }, { count: totalGuru }] = await Promise.all([
+      supabase.from('siswa_kelas').select('kelas_id, siswa_id, tahun_ajaran_id').in('tahun_ajaran_id', tahunIds),
       supabase.from('user_profile').select('*', { count: 'exact', head: true }).eq('is_active', true),
     ])
 
     // Group by tahun_ajaran_id in-memory
-    const kelasByTahun = new Map<string, number>()
-    for (const k of allKelas ?? []) {
-      kelasByTahun.set(k.tahun_ajaran_id, (kelasByTahun.get(k.tahun_ajaran_id) ?? 0) + 1)
-    }
-
+    const kelasByTahun = new Map<string, Set<string>>()
     const siswaByTahun = new Map<string, Set<string>>()
     for (const sk of allSiswaKelas ?? []) {
+      if (!kelasByTahun.has(sk.tahun_ajaran_id)) kelasByTahun.set(sk.tahun_ajaran_id, new Set())
       if (!siswaByTahun.has(sk.tahun_ajaran_id)) siswaByTahun.set(sk.tahun_ajaran_id, new Set())
+      kelasByTahun.get(sk.tahun_ajaran_id)!.add(sk.kelas_id)
       siswaByTahun.get(sk.tahun_ajaran_id)!.add(sk.siswa_id)
     }
 
     const result = (data ?? []).map(t => ({
       ...t,
-      jumlah_kelas: kelasByTahun.get(t.id) ?? 0,
+      jumlah_kelas: kelasByTahun.get(t.id)?.size ?? 0,
       jumlah_siswa: siswaByTahun.get(t.id)?.size ?? 0,
       jumlah_guru: totalGuru ?? 0,
     }))
@@ -58,7 +55,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     await requireRole(['admin'])
-    const supabase = await createServerClient()
+    const supabase = createServiceClient()
     const body     = await request.json()
     const { nama } = body
 

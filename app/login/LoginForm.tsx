@@ -100,14 +100,7 @@ export function LoginForm() {
           return
         }
 
-        const redirectMap: Record<string, string> = {
-          admin:       '/admin',
-          wali_kelas:  '/guru',
-          guru_tahfiz: '/guru',
-          guru_wafa:   '/guru',
-        }
-
-        router.push(redirectMap[profile.role] ?? '/login')
+        router.push(profile.role === 'admin' ? '/admin' : '/guru')
         router.refresh()
       } catch {
         setError('Terjadi kesalahan. Silakan coba lagi.')

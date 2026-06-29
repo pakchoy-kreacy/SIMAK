@@ -2,19 +2,31 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRole }               from '@/lib/auth/staff'
 import { createServiceClient }       from '@/lib/supabase/server'
 
+async function getKelasWithSiswa(supabase: any) {
+  const { data: skRows } = await supabase.from('siswa_kelas').select('kelas_id')
+  const kelasIds = Array.from(new Set((skRows ?? []).map((r: any) => r.kelas_id))).filter(Boolean) as string[]
+  if (kelasIds.length === 0) return []
+  const { data } = await supabase
+    .from('kelas')
+    .select('id, nama_kelas, tahun_ajaran_id, wali_kelas_id')
+    .in('id', kelasIds)
+    .order('nama_kelas')
+  return data ?? []
+}
+
 export async function GET() {
   try {
     await requireRole(['admin'])
     const supabase = createServiceClient()
 
-    const [kelasRes, guruRes, tahunAjaranRes] = await Promise.all([
-      supabase.from('kelas').select('id, nama_kelas, tahun_ajaran_id, wali_kelas_id').order('nama_kelas'),
+    const [kelasData, guruRes, tahunAjaranRes] = await Promise.all([
+      getKelasWithSiswa(supabase),
       supabase.from('user_profile').select('id, nama, role').neq('role', 'admin').order('nama'),
       supabase.from('tahun_ajaran').select('id, nama').order('nama'),
     ])
 
     return NextResponse.json({
-      kelas:     kelasRes.data ?? [],
+      kelas:     kelasData,
       guru:      guruRes.data ?? [],
       tahunAjaran: tahunAjaranRes.data ?? [],
     })
@@ -72,15 +84,15 @@ export async function POST(request: NextRequest) {
     // Remove roles from users who no longer have any assignment
     // (for simplicity, skip this for MVP — manual cleanup via SQL if needed)
 
-    const [kelasRes, guruRes, tahunAjaranRes] = await Promise.all([
-      supabase.from('kelas').select('id, nama_kelas, tahun_ajaran_id, wali_kelas_id').order('nama_kelas'),
+    const [kelasData, guruRes, tahunAjaranRes] = await Promise.all([
+      getKelasWithSiswa(supabase),
       supabase.from('user_profile').select('id, nama, role').neq('role', 'admin').order('nama'),
       supabase.from('tahun_ajaran').select('id, nama').order('nama'),
     ])
 
     return NextResponse.json({
       success: true,
-      kelas:     kelasRes.data ?? [],
+      kelas:     kelasData,
       guru:      guruRes.data ?? [],
       tahunAjaran: tahunAjaranRes.data ?? [],
     })
