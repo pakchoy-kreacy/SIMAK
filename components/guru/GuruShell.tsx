@@ -7,21 +7,16 @@ import { createClient }                        from '@/lib/supabase/client'
 import { cn }                                  from '@/lib/utils/cn'
 import { GlobalSearch }                        from '@/components/ui/GlobalSearch'
 import { SessionContext, type SessionData }    from '@/lib/auth/session-context'
+import type { StaffRole }                      from '@/lib/types/app'
 
 const MENU_GROUPS = [
   {
     title: 'Menu',
+    roles: ['wali_kelas', 'admin'] as StaffRole[],
     items: [
-      { href: '/guru',             label: 'Dashboard',          icon: <IconDashboard /> },
-      { href: '/guru/kelas',       label: 'Kelas / Mutabaah',   icon: <IconKelas /> },
+      { href: '/guru',              label: 'Dashboard',          icon: <IconDashboard /> },
+      { href: '/guru/kelas',        label: 'Kelas / Mutabaah',   icon: <IconKelas /> },
       { href: '/guru/atur-mutabaah', label: 'Atur Item Mutabaah', icon: <IconSettings /> },
-    ],
-  },
-  {
-    title: 'Monitoring',
-    items: [
-      { href: '/guru/wafa',   label: 'Wafa',    icon: <IconWafa /> },
-      { href: '/guru/tahfiz', label: 'Tahfizh', icon: <IconTahfiz /> },
     ],
   },
 ]
@@ -41,6 +36,7 @@ export function GuruShell({
   const pathname = usePathname()
 
   const nama = session?.nama ?? ''
+  const role = session?.role ?? 'wali_kelas'
 
   useEffect(() => {
     let cancelled = false
@@ -137,6 +133,7 @@ export function GuruShell({
       <aside className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 bg-primary-800 dark:bg-neutral-950 text-white z-50">
         <SidebarContent
           nama={nama}
+          role={role}
           pathname={pathname}
           darkMode={darkMode}
           onToggleDark={toggleDarkMode}
@@ -154,6 +151,7 @@ export function GuruShell({
           <aside className="absolute inset-y-0 left-0 w-72 bg-primary-800 dark:bg-neutral-950 text-white shadow-2xl transition-transform animate-in slide-in-from-left">
             <SidebarContent
               nama={nama}
+              role={role}
               pathname={pathname}
               darkMode={darkMode}
               onToggleDark={toggleDarkMode}
@@ -224,6 +222,7 @@ export function GuruShell({
 // ─── Sidebar Content ──────────────────────────────────────
 function SidebarContent({
   nama,
+  role,
   pathname,
   darkMode,
   onToggleDark,
@@ -231,12 +230,14 @@ function SidebarContent({
   onClose,
 }: {
   nama:          string
+  role:          StaffRole
   pathname:      string
   darkMode:      boolean
   onToggleDark:  () => void
   onLogout:      () => void
   onClose?:      () => void
 }) {
+  const visibleGroups = MENU_GROUPS.filter(g => !g.roles || g.roles.includes(role))
   return (
     <div className="flex flex-col h-full">
       {/* Logo */}
@@ -249,7 +250,7 @@ function SidebarContent({
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-6" aria-label="Navigasi guru">
-        {MENU_GROUPS.map((group) => (
+        {visibleGroups.map((group) => (
           <div key={group.title}>
             <p className="text-xs font-semibold text-primary-200 dark:text-neutral-400 uppercase tracking-wider px-2 mb-2">
               {group.title}

@@ -6,6 +6,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useQueryClient }              from '@tanstack/react-query'
 import { generateImportTemplate, downloadBlob } from '@/lib/utils/excel'
 import { cn }                    from '@/lib/utils/cn'
 
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export function ImportExcelModal({ onClose, onSuccess }: Props) {
+  const queryClient = useQueryClient()
   const fileRef  = useRef<HTMLInputElement>(null)
   const [file,        setFile]        = useState<File | null>(null)
   const [tahunId,     setTahunId]     = useState('')
@@ -75,6 +77,7 @@ export function ImportExcelModal({ onClose, onSuccess }: Props) {
     if (res.ok) {
       setResult({ inserted: data.inserted, skipped: data.skipped })
       setStep('done')
+      queryClient.invalidateQueries({ queryKey: ['kelas'] })
     }
     setIsLoading(false)
   }

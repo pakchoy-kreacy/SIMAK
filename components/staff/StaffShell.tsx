@@ -45,8 +45,8 @@ const MENU_GROUPS: MenuGroup[] = [
     items: [
       { href: '/admin',              label: 'Dashboard',    icon: <IconDashboard /> },
       { href: '/admin/tahun-ajaran', label: 'Tahun Ajaran', icon: <IconTahun /> },
-      { href: '/admin/kelas',        label: 'Kelas',        icon: <IconKelas /> },
       { href: '/admin/siswa',        label: 'Siswa',        icon: <IconSiswa /> },
+      { href: '/admin/kelas',        label: 'Kelas',        icon: <IconKelas /> },
       { href: '/admin/staff',        label: 'Guru',         icon: <IconStaff /> },
     ],
   },

@@ -126,13 +126,18 @@ export default function AdminKelasPage() {
 
   const waliKelasStaff = staffList.filter(s => ['wali_kelas', 'admin'].includes(s.role))
 
+  // Only show classes that have students (auto-generated from Excel import)
+  const kelasAktif = kelasList.filter(k => k.jumlah_siswa > 0)
+
   return (
     <div className="min-h-screen bg-neutral-50">
       <div className="bg-white border-b border-neutral-100 px-4 py-4 sticky top-14 md:top-0 z-30">
         <Breadcrumb />
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-bold text-neutral-800">Kelola Kelas</h2>
-          <button onClick={openAddForm} className="h-9 px-3 bg-primary-500 text-white text-xs font-semibold rounded-lg">+ Tambah</button>
+          <div>
+            <h2 className="text-lg font-bold text-neutral-800">Kelola Kelas</h2>
+            <p className="text-xs text-neutral-400 mt-0.5">Kelas otomatis dibuat saat import data siswa via Excel</p>
+          </div>
         </div>
         {/* Filter tahun */}
         <select
@@ -169,7 +174,7 @@ export default function AdminKelasPage() {
               </div>
             ))}
           </div>
-        ) : kelasList.length === 0 ? (
+        ) : kelasAktif.length === 0 ? (
           <div className="bg-white rounded-xl shadow-card border border-neutral-100 text-center py-12">
             <div className="w-16 h-16 rounded-full bg-neutral-100 flex items-center justify-center mx-auto mb-3">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -177,11 +182,11 @@ export default function AdminKelasPage() {
                 <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
               </svg>
             </div>
-            <p className="text-sm font-semibold text-neutral-600">Belum ada kelas</p>
-            <p className="text-xs text-neutral-400 mt-1">Tambah kelas untuk tahun ajaran ini</p>
+            <p className="text-sm font-semibold text-neutral-600">Belum ada kelas dengan siswa</p>
+            <p className="text-xs text-neutral-400 mt-1">Import data siswa via Excel untuk membuat kelas otomatis</p>
           </div>
         ) : (
-          kelasList.map((kelas, i) => (
+          kelasAktif.map((kelas, i) => (
             <div key={kelas.id} className="card animate-in" style={{ animationDelay: `${i * 0.03}s` }}>
               {confirmDel === kelas.id ? (
                 <div className="space-y-2">
