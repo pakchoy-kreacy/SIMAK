@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo }   from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useToast }            from '@/components/ui/Toast'
 import { Breadcrumb }          from '@/components/ui/Breadcrumb'
@@ -61,7 +61,7 @@ export default function AdminMutabaahItemsPage() {
 
   const { data: tahunList = [] } = useQuery<TahunItem[]>({
     queryKey: ['tahun-ajaran'],
-    queryFn: async () => { const r = await fetch('/api/admin/tahun-ajaran'); return r.json() },
+    queryFn: async () => { const r = await fetch('/api/admin/tahun-ajaran'); if (!r.ok) throw new Error('Gagal'); return r.json() },
     staleTime: 60000,
   })
 
@@ -69,6 +69,7 @@ export default function AdminMutabaahItemsPage() {
     queryKey: ['mutabaah-items', selectedTahun],
     queryFn: async () => {
       const r = await fetch(`/api/admin/mutabaah-items${selectedTahun ? `?tahunId=${selectedTahun}` : ''}`)
+      if (!r.ok) throw new Error('Gagal')
       return r.json()
     },
     staleTime: 30000,
@@ -76,12 +77,12 @@ export default function AdminMutabaahItemsPage() {
   })
 
   // Set initial selected tahun once list loads
-  const [initialSet, setInitialSet] = useState(false)
-  if (!initialSet && tahunList.length > 0 && !selectedTahun) {
-    const aktif = tahunList.find((t: any) => t.is_active)
-    setSelectedTahun(aktif?.id ?? tahunList[0]?.id ?? '')
-    setInitialSet(true)
-  }
+  useEffect(() => {
+    if (!selectedTahun && tahunList.length > 0) {
+      const aktif = tahunList.find((t: any) => t.is_active)
+      setSelectedTahun(aktif?.id ?? tahunList[0]?.id ?? '')
+    }
+  }, [tahunList, selectedTahun])
 
   const groupedItems = useMemo(() => {
     const parents = items.filter(i => !i.parent_id && i.is_active)
@@ -442,8 +443,14 @@ export default function AdminMutabaahItemsPage() {
                 <p className="text-xs font-semibold text-neutral-400 mb-2 uppercase tracking-wide">Nonaktif ({inactiveItems.length})</p>
                 <div className="space-y-1">
                   {inactiveItems.map(item => (
-                    <div key={item.id} className="bg-white rounded-lg border border-neutral-200 px-4 py-2.5 flex items-center gap-3 opacity-50">
+                    <div key={item.id} className="bg-white rounded-lg border border-neutral-200 px-4 py-2.5 flex items-center gap-3">
                       <p className="flex-1 text-sm text-neutral-500 line-through">{item.nama_item}</p>
+                      <button
+                        onClick={() => setConfirmHapus(item.id)}
+                        className="text-xs text-danger font-semibold px-2 py-1 rounded hover:bg-red-50 transition-colors"
+                      >
+                        Hapus
+                      </button>
                     </div>
                   ))}
                 </div>

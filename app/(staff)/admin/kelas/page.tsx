@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState }            from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useToast }            from '@/components/ui/Toast'
 import { Breadcrumb }          from '@/components/ui/Breadcrumb'
@@ -44,13 +44,13 @@ export default function AdminKelasPage() {
 
   const { data: tahunList = [], isLoading: tahunLoading } = useQuery<TahunItem[]>({
     queryKey: ['tahun-ajaran'],
-    queryFn: async () => { const r = await fetch('/api/admin/tahun-ajaran'); return r.json() },
+    queryFn: async () => { const r = await fetch('/api/admin/tahun-ajaran'); if (!r.ok) throw new Error('Gagal'); return r.json() },
     staleTime: 60000,
   })
 
   const { data: rawStaff = [] } = useQuery<StaffItem[]>({
     queryKey: ['staff'],
-    queryFn: async () => { const r = await fetch('/api/admin/staff'); return r.json() },
+    queryFn: async () => { const r = await fetch('/api/admin/staff'); if (!r.ok) throw new Error('Gagal'); return r.json() },
     staleTime: 60000,
   })
 
@@ -60,6 +60,7 @@ export default function AdminKelasPage() {
     queryKey: ['kelas', selectedTahun],
     queryFn: async () => {
       const r = await fetch(`/api/admin/kelas${selectedTahun ? `?tahunId=${selectedTahun}` : ''}`)
+      if (!r.ok) throw new Error('Gagal')
       return r.json()
     },
     staleTime: 30000,
@@ -69,13 +70,13 @@ export default function AdminKelasPage() {
   const isLoading = tahunLoading || kelasLoading || !selectedTahun
 
   // Set initial selected tahun once list loads
-  const [initialSet, setInitialSet] = useState(false)
-  if (!initialSet && tahunList.length > 0 && !selectedTahun) {
-    const aktif = tahunList.find((t: any) => t.is_active)
-    setSelectedTahun(aktif?.id ?? tahunList[0]?.id ?? '')
-    setFormTahun(aktif?.id ?? tahunList[0]?.id ?? '')
-    setInitialSet(true)
-  }
+  useEffect(() => {
+    if (!selectedTahun && tahunList.length > 0) {
+      const aktif = tahunList.find((t: any) => t.is_active)
+      setSelectedTahun(aktif?.id ?? tahunList[0]?.id ?? '')
+      setFormTahun(aktif?.id ?? tahunList[0]?.id ?? '')
+    }
+  }, [tahunList, selectedTahun])
 
   function openAddForm() {
     setEditKelas(null)

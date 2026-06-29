@@ -20,6 +20,8 @@ export async function GET() {
 
     // Batch stats: 3 queries total instead of N×3 (N+1 fix)
     const tahunIds = (data ?? []).map(t => t.id)
+    if (tahunIds.length === 0) return NextResponse.json(data ?? [])
+
     const [{ data: allKelas }, { data: allSiswaKelas }, { count: totalGuru }] = await Promise.all([
       supabase.from('kelas').select('id, tahun_ajaran_id'),
       supabase.from('siswa_kelas').select('siswa_id, tahun_ajaran_id').in('tahun_ajaran_id', tahunIds),
