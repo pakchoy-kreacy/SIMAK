@@ -70,9 +70,9 @@ const MENU_GROUPS: MenuGroup[] = [
     title: 'Akademik',
     roles: ['wali_kelas', 'guru_tahfiz', 'guru_wafa'],
     items: [
-      { href: '/tahfiz',     label: 'Tahfizh',   icon: <IconTahfiz /> },
-      { href: '/wafa',       label: 'Wafa',       icon: <IconWafa /> },
-      { href: '/wali-kelas', label: 'Wali Kelas', icon: <IconWaliKelas /> },
+      { href: '/guru/tahfiz',  label: 'Tahfizh',   icon: <IconTahfiz /> },
+      { href: '/guru/wafa',    label: 'Wafa',      icon: <IconWafa /> },
+      { href: '/guru/kelas',   label: 'Wali Kelas', icon: <IconWaliKelas /> },
     ],
   },
 ]

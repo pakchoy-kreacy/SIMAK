@@ -275,7 +275,7 @@ function SidebarContent({
             </p>
             <div className="space-y-0.5">
               {group.items.map((item) => {
-                const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+                const isActive = pathname === item.href || (item.href !== '/guru' && pathname.startsWith(item.href + '/'))
                 return (
                   <Link
                     key={item.href}
@@ -301,31 +301,31 @@ function SidebarContent({
       </nav>
 
       {/* User profile + actions */}
-      <div className="border-t border-primary-700/50 dark:border-neutral-800 px-3 py-3 flex-shrink-0 space-y-1">
-        <div className="flex items-center gap-3 px-2 py-2">
+      <div className="border-t border-primary-700/50 dark:border-neutral-800 px-4 py-2.5 flex-shrink-0">
+        <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0">
             <span className="text-white font-bold text-sm">{nama.charAt(0)}</span>
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-white truncate leading-tight">{nama}</p>
           </div>
+          <button
+            onClick={onToggleDark}
+            title={darkMode ? 'Mode terang' : 'Mode gelap'}
+            className="w-8 h-8 bg-primary-700 dark:bg-neutral-800 hover:bg-primary-600 dark:hover:bg-neutral-700 rounded-full flex items-center justify-center transition-colors flex-shrink-0"
+            aria-label={darkMode ? 'Mode terang' : 'Mode gelap'}
+          >
+            {darkMode ? <SunIcon /> : <MoonIcon />}
+          </button>
+          <button
+            onClick={onLogout}
+            title="Keluar"
+            className="w-8 h-8 bg-primary-700 dark:bg-neutral-800 hover:bg-red-600 rounded-full flex items-center justify-center transition-colors flex-shrink-0"
+            aria-label="Keluar"
+          >
+            <LogoutIcon />
+          </button>
         </div>
-        <button
-          onClick={onToggleDark}
-          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-primary-200 dark:text-neutral-400 hover:bg-white/10 hover:text-white dark:hover:bg-neutral-800 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
-          aria-label={darkMode ? 'Mode terang' : 'Mode gelap'}
-        >
-          {darkMode ? <SunIcon /> : <MoonIcon />}
-          {darkMode ? 'Mode Terang' : 'Mode Gelap'}
-        </button>
-        <button
-          onClick={onLogout}
-          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-primary-200 dark:text-neutral-400 hover:bg-white/10 hover:text-white dark:hover:bg-neutral-800 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
-          aria-label="Keluar"
-        >
-          <LogoutIcon />
-          Keluar
-        </button>
       </div>
     </div>
   )
