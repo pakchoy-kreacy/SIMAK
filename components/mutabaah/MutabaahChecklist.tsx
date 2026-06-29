@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState }           from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useToggleMutabaah }  from '@/hooks/useMutabaah'
 import { useOfflineStore }    from '@/stores/offlineStore'
 import { useToast }           from '@/components/ui/Toast'
@@ -49,7 +49,6 @@ export function MutabaahChecklist({
       showToast('Mutabaah sudah terkunci setelah pukul 23:59', 'warning')
       return
     }
-
     setSavingId(item.id)
 
     toggle(
@@ -65,6 +64,22 @@ export function MutabaahChecklist({
           setSavingId(null)
           showToast('Gagal menyimpan. Coba lagi.', 'error')
         },
+      }
+    )
+  }
+
+  function handleTextSave(itemId: string, catatan: string) {
+    if (isLocked) {
+      showToast('Mutabaah sudah terkunci setelah pukul 23:59', 'warning')
+      return
+    }
+    setSavingId(itemId)
+
+    toggle(
+      { itemId, tanggal, isChecked: catatan.length > 0, catatan: catatan || null },
+      {
+        onSuccess: () => { setSavingId(null) },
+        onError: () => { setSavingId(null); showToast('Gagal menyimpan', 'error') },
       }
     )
   }
@@ -153,6 +168,7 @@ export function MutabaahChecklist({
                     isSaving={savingId === child.id}
                     isLocked={isLocked}
                     onToggle={() => handleToggle(child)}
+                    onTextSave={(catatan) => handleTextSave(child.id, catatan)}
                     index={ci}
                   />
                 ))}
@@ -165,6 +181,7 @@ export function MutabaahChecklist({
               isSaving={savingId === parent.id}
               isLocked={isLocked}
               onToggle={() => handleToggle(parent)}
+              onTextSave={(catatan) => handleTextSave(parent.id, catatan)}
               index={items.indexOf(parent)}
             />
           )
@@ -177,21 +194,35 @@ export function MutabaahChecklist({
 }
 
 // -----------------------------------------------------------
-// Satu item checklist
+// Satu item checklist — checkbox atau text input
 // -----------------------------------------------------------
 function MutabaahItem({
   item,
   isSaving,
   isLocked,
   onToggle,
+  onTextSave,
   index,
 }: {
-  item:     MutabaahItemWithStatus
-  isSaving: boolean
-  isLocked: boolean
-  onToggle: () => void
-  index:    number
+  item:        MutabaahItemWithStatus
+  isSaving:    boolean
+  isLocked:    boolean
+  onToggle:    () => void
+  onTextSave:  (catatan: string) => void
+  index:       number
 }) {
+  if (item.tipe === 'text') {
+    return (
+      <MutabaahTextItem
+        item={item}
+        isSaving={isSaving}
+        isLocked={isLocked}
+        onSave={onTextSave}
+        index={index}
+      />
+    )
+  }
+
   return (
     <button
       onClick={onToggle}
@@ -241,5 +272,143 @@ function MutabaahItem({
         </span>
       )}
     </button>
+  )
+}
+
+// -----------------------------------------------------------
+// Surah list untuk dropdown tilawah
+// -----------------------------------------------------------
+const SURAH_LIST = [
+  'Al-Fatihah', 'Al-Baqarah', 'Ali Imran', 'An-Nisa\'', 'Al-Ma\'idah',
+  'Al-An\'am', 'Al-A\'raf', 'Al-Anfal', 'At-Taubah', 'Yunus',
+  'Hud', 'Yusuf', 'Ar-Ra\'d', 'Ibrahim', 'Al-Hijr',
+  'An-Nahl', 'Al-Isra\'', 'Al-Kahfi', 'Maryam', 'Taha',
+  'Al-Anbiya\'', 'Al-Hajj', 'Al-Mu\'minun', 'An-Nur', 'Al-Furqan',
+  'Asy-Syu\'ara\'', 'An-Naml', 'Al-Qasas', 'Al-\'Ankabut', 'Ar-Rum',
+  'Luqman', 'As-Sajdah', 'Al-Ahzab', 'Saba\'', 'Fatir',
+  'Yasin', 'As-Saffat', 'Sad', 'Az-Zumar', 'Gafir',
+  'Fussilat', 'Asy-Syura', 'Az-Zukhruf', 'Ad-Dukhan', 'Al-Jasiyah',
+  'Al-Ahqaf', 'Muhammad', 'Al-Fath', 'Al-Hujurat', 'Qaf',
+  'Az-Zariyat', 'At-Tur', 'An-Najm', 'Al-Qamar', 'Ar-Rahman',
+  'Al-Waqi\'ah', 'Al-Hadid', 'Al-Mujadilah', 'Al-Hasyr', 'Al-Mumtahanah',
+  'As-Saff', 'Al-Jumu\'ah', 'Al-Munafiqun', 'At-Tagabun', 'At-Talaq',
+  'At-Tahrim', 'Al-Mulk', 'Al-Qalam', 'Al-Haqqah', 'Al-Ma\'arij',
+  'Nuh', 'Al-Jinn', 'Al-Muzzammil', 'Al-Muddassir', 'Al-Qiyamah',
+  'Al-Insan', 'Al-Mursalat', 'An-Naba\'', 'An-Nazi\'at', '\'Abasa',
+  'At-Takwir', 'Al-Infitar', 'Al-Mutaffifin', 'Al-Insyiqaq', 'Al-Buruj',
+  'At-Tariq', 'Al-A\'la', 'Al-Gasyiyah', 'Al-Fajr', 'Al-Balad',
+  'Asy-Syams', 'Al-Lail', 'Ad-Duha', 'Asy-Syarh', 'At-Tin',
+  'Al-\'Alaq', 'Al-Qadr', 'Al-Bayyinah', 'Az-Zalzalah', 'Al-\'Adiyat',
+  'Al-Qari\'ah', 'At-Takasur', 'Al-\'Asr', 'Al-Humazah', 'Al-Fil',
+  'Quraisy', 'Al-Ma\'un', 'Al-Kausar', 'Al-Kafirun', 'An-Nasr',
+  'Al-Lahab', 'Al-Ikhlas', 'Al-Falaq', 'An-Nas',
+]
+
+function parseCatatan(catatan: string | null): { surah: string; ayat: string } {
+  if (!catatan) return { surah: '', ayat: '' }
+  const idx = catatan.indexOf(':')
+  if (idx === -1) return { surah: '', ayat: catatan }
+  return { surah: catatan.slice(0, idx).trim(), ayat: catatan.slice(idx + 1).trim() }
+}
+
+// -----------------------------------------------------------
+// Text input item — untuk tilawah / muroja'ah (input Surah + Ayat)
+// -----------------------------------------------------------
+function MutabaahTextItem({
+  item,
+  isSaving,
+  isLocked,
+  onSave,
+  index,
+}: {
+  item:     MutabaahItemWithStatus
+  isSaving: boolean
+  isLocked: boolean
+  onSave:   (catatan: string) => void
+  index:    number
+}) {
+  const parsed = parseCatatan(item.catatan)
+  const [surah, setSurah] = useState(parsed.surah)
+  const [ayat, setAyat]   = useState(parsed.ayat)
+  const timerRef           = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const hasSaved           = useRef(false)
+
+  const doSave = useCallback((newSurah: string, newAyat: string) => {
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => {
+      const c = newSurah && newAyat ? `${newSurah}: ${newAyat}` : ''
+      if (c || hasSaved.current) {
+        onSave(c)
+        hasSaved.current = true
+      }
+    }, 600)
+  }, [onSave])
+
+  // Sync from server when item.catatan changes externally
+  useEffect(() => {
+    const p = parseCatatan(item.catatan)
+    setSurah(p.surah)
+    setAyat(p.ayat)
+  }, [item.catatan])
+
+  // Cleanup timer
+  useEffect(() => {
+    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
+  }, [])
+
+  const isFilled = item.is_checked && item.catatan
+
+  return (
+    <div
+      className={cn(
+        'rounded-lg border p-3 animate-in',
+        isFilled ? 'bg-green-50 border-green-200' : 'bg-white border-neutral-200',
+        isLocked && 'opacity-70'
+      )}
+      style={{ animationDelay: `${index * 0.03}s` }}
+    >
+      <p className={cn('text-sm font-semibold mb-2', isFilled ? 'text-green-700' : 'text-neutral-700')}>
+        {item.nama_item}
+        {isSaving && <span className="ml-2 inline-block w-3 h-3 border-2 border-primary-500 border-t-transparent rounded-full animate-spin align-middle" />}
+      </p>
+
+      <div className="space-y-2">
+        {/* Surah dropdown */}
+        <div>
+          <label className="block text-[11px] font-medium text-neutral-500 mb-1">Surat</label>
+          <select
+            value={surah}
+            onChange={e => { setSurah(e.target.value); doSave(e.target.value, ayat) }}
+            disabled={isLocked}
+            className="w-full h-9 px-2 border border-neutral-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 disabled:bg-neutral-100"
+          >
+            <option value="">-- Pilih Surat --</option>
+            {SURAH_LIST.map(s => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Ayat input */}
+        <div>
+          <label className="block text-[11px] font-medium text-neutral-500 mb-1">Ayat (contoh: 1-5)</label>
+          <input
+            type="text"
+            value={ayat}
+            onChange={e => { setAyat(e.target.value); doSave(surah, e.target.value) }}
+            onBlur={() => { if (surah && ayat) onSave(`${surah}: ${ayat}`) }}
+            disabled={isLocked}
+            placeholder="1-5"
+            className="w-full h-9 px-3 border border-neutral-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 disabled:bg-neutral-100"
+          />
+        </div>
+      </div>
+
+      {isFilled && (
+        <p className="text-xs text-green-600 mt-2 font-medium">
+          ✓ {item.catatan}
+        </p>
+      )}
+    </div>
   )
 }

@@ -16,11 +16,12 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     const supabase = await createServerClient()
     const { id }   = await params
     const body     = await request.json()
-    const { namaItem, isActive, urutan, parentId } = body as {
+    const { namaItem, isActive, urutan, parentId, tipe } = body as {
       namaItem?: string
       isActive?: boolean
       urutan?:   number
-      parentId?: string | null       // null = jadikan item induk; string = pindahkan ke bawah induk tsb
+      parentId?: string | null
+      tipe?:     string
     }
 
     // Fetch item saat ini
@@ -35,6 +36,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     if (namaItem !== undefined) updates.nama_item = namaItem.trim()
     if (isActive !== undefined) updates.is_active = isActive
     if (urutan   !== undefined) updates.urutan    = urutan
+    if (tipe     !== undefined) updates.tipe      = tipe
 
     // ── Reparent (pindahkan) ──
     if (parentId !== undefined) {

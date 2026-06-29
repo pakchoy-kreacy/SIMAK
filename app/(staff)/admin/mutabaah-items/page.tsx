@@ -15,6 +15,7 @@ interface ItemRow {
   urutan:          number
   is_active:       boolean
   tahun_ajaran_id: string
+  tipe:            string
   jumlah_kelas:    number
   kelas_list:      KelasInfo[]
 }
@@ -42,6 +43,7 @@ export default function AdminMutabaahItemsPage() {
 
   // Form state
   const [formNama,   setFormNama]   = useState('')
+  const [formTipe,   setFormTipe]   = useState('checkbox')
   const [subItems,   setSubItems]   = useState<string[]>([''])
   const [formLoad,   setFormLoad]   = useState(false)
   const [confirmDel, setConfirmDel] = useState<string | null>(null)
@@ -99,6 +101,7 @@ export default function AdminMutabaahItemsPage() {
   function openMainForm() {
     setEditItem(null)
     setFormNama('')
+    setFormTipe('checkbox')
     setSubItems([''])
     setShowMainForm(true)
   }
@@ -106,6 +109,7 @@ export default function AdminMutabaahItemsPage() {
   function openEditForm(item: ItemRow) {
     setEditItem(item)
     setFormNama(item.nama_item)
+    setFormTipe(item.tipe ?? 'checkbox')
     setSubItems([])
     setShowMainForm(true)
   }
@@ -146,6 +150,7 @@ export default function AdminMutabaahItemsPage() {
       namaItem:      formNama,
       tahunAjaranId: selectedTahun,
       parentId:      null,
+      tipe:          formTipe,
       subItems:      validSubs.length > 0 ? validSubs : undefined,
     }
 
@@ -480,6 +485,17 @@ export default function AdminMutabaahItemsPage() {
                   required
                 />
               </div>
+
+              {!editItem && (
+                <div>
+                  <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Tipe Item</label>
+                  <select value={formTipe} onChange={e => setFormTipe(e.target.value)} className="w-full h-11 px-3 border border-neutral-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-300">
+                    <option value="checkbox">Centang (Checkbox)</option>
+                    <option value="text">Input Teks (Orang tua isi surat & ayat)</option>
+                  </select>
+                  <p className="text-[11px] text-neutral-400 mt-1">Tipe "Input Teks" hanya untuk sub item</p>
+                </div>
+              )}
 
               {/* Sub items opsional — hanya untuk item baru */}
               {!editItem && (

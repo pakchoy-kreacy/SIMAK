@@ -39,12 +39,18 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     const supabase = await createServerClient()
     const { id }   = await params
 
-    // Cek apakah ada siswa di kelas ini
-    const { count } = await supabase
-      .from('siswa_kelas').select('*', { count: 'exact', head: true }).eq('kelas_id', id)
+    // Cek apakah ada siswa di kelas ini (tahun ajaran yang sama)
+    const { data: kelas } = await supabase
+      .from('kelas').select('tahun_ajaran_id').eq('id', id).single()
 
-    if ((count ?? 0) > 0) {
-      return NextResponse.json({ error: 'Kelas masih memiliki siswa, tidak dapat dihapus' }, { status: 409 })
+    if (kelas) {
+      const { count } = await supabase
+        .from('siswa_kelas').select('*', { count: 'exact', head: true })
+        .eq('kelas_id', id).eq('tahun_ajaran_id', kelas.tahun_ajaran_id)
+
+      if ((count ?? 0) > 0) {
+        return NextResponse.json({ error: 'Kelas masih memiliki siswa, tidak dapat dihapus' }, { status: 409 })
+      }
     }
 
     const { error } = await supabase.from('kelas').delete().eq('id', id)

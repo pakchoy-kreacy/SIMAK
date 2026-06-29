@@ -61,20 +61,22 @@ export async function GET(request: NextRequest) {
       // Ambil semua log dalam range
       let logQuery = supabase
         .from('mutabaah_log')
-        .select('siswa_id, item_id, tanggal, is_checked')
+        .select('siswa_id, item_id, tanggal, is_checked, catatan')
         .in('siswa_id', siswaIds)
 
       if (dateFrom) logQuery = logQuery.gte('tanggal', dateFrom)
       if (dateTo)   logQuery = logQuery.lte('tanggal', dateTo)
 
-      const { data: logs } = await logQuery
+      const { data: logs } = await logQuery as any
 
       // Build pivot: siswa × tanggal
       type LogKey = string
       const logMap = new Map<LogKey, boolean>()
+      const catatanMap = new Map<LogKey, string>()
       const dateSet = new Set<string>()
       for (const log of logs ?? []) {
         logMap.set(`${log.siswa_id}:${log.tanggal}:${log.item_id}`, log.is_checked)
+        if (log.catatan) catatanMap.set(`${log.siswa_id}:${log.tanggal}:${log.item_id}`, log.catatan)
         dateSet.add(log.tanggal)
       }
       const dates = Array.from(dateSet).sort()
@@ -86,18 +88,22 @@ export async function GET(request: NextRequest) {
           'Kelas':        siswa.nama_kelas,
         }
         let totalChecked = 0, totalPossible = 0
+        const catatanItems: string[] = []
         for (const tanggal of dates) {
           let dayChecked = 0
           for (const item of items ?? []) {
             const val = logMap.get(`${siswa.id}:${tanggal}:${item.id}`) ?? false
             if (val) dayChecked++
             totalPossible++
+            const c = catatanMap.get(`${siswa.id}:${tanggal}:${item.id}`)
+            if (c) catatanItems.push(`[${tanggal}] ${item.nama_item}: ${c}`)
           }
           totalChecked += dayChecked
           const pct = (items?.length ?? 0) > 0 ? Math.round((dayChecked / (items?.length ?? 1)) * 100) : 0
           row[tanggal] = `${pct}%`
         }
         row['Rata-rata'] = totalPossible > 0 ? `${Math.round((totalChecked / totalPossible) * 100)}%` : '0%'
+        row['Catatan Tilawah'] = catatanItems.length > 0 ? catatanItems.join('; ') : ''
         return row
       })
 

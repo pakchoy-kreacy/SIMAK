@@ -33,6 +33,8 @@ export interface MutabaahItemWithStatus {
   is_checked: boolean
   is_locked:  boolean
   parent_id:  string | null
+  tipe:       string
+  catatan:    string | null
   children?:  MutabaahItemWithStatus[]
 }
 

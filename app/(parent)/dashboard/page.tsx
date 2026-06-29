@@ -99,6 +99,8 @@ export default async function DashboardPage() {
       is_checked: logMap.get(item.id) ?? false,
       is_locked:  isLocked,
       parent_id:  item.parent_id,
+      tipe:       (item as any).tipe ?? 'checkbox',
+      catatan:    null,
     }))
 
     // Build hierarchy: parent → children

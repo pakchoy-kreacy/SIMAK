@@ -6,6 +6,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link                                   from 'next/link'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useToast }            from '@/components/ui/Toast'
 import { Breadcrumb }          from '@/components/ui/Breadcrumb'
@@ -184,6 +185,13 @@ export default function AdminKelasPage() {
             </div>
             <p className="text-sm font-semibold text-neutral-600">Belum ada kelas dengan siswa</p>
             <p className="text-xs text-neutral-400 mt-1">Import data siswa via Excel untuk membuat kelas otomatis</p>
+            <Link
+              href="/admin/siswa"
+              className="inline-flex items-center gap-1.5 mt-4 h-10 px-5 bg-primary-500 text-white rounded-lg text-sm font-semibold hover:bg-primary-600 transition-colors"
+            >
+              Import Siswa dari Excel
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </Link>
           </div>
         ) : (
           kelasAktif.map((kelas, i) => (

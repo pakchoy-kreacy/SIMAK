@@ -72,10 +72,12 @@ export function useToggleMutabaah() {
       itemId,
       tanggal,
       isChecked,
+      catatan,
     }: {
       itemId:    string
       tanggal:   string
       isChecked: boolean
+      catatan?:  string | null
     }) => {
       if (!isOnline) {
         // Offline: simpan ke IndexedDB queue
@@ -95,7 +97,7 @@ export function useToggleMutabaah() {
       const res = await fetch('/api/parent/mutabaah', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ itemId, tanggal, isChecked }),
+        body:    JSON.stringify({ itemId, tanggal, isChecked, catatan }),
       })
 
       if (!res.ok) {
@@ -107,7 +109,7 @@ export function useToggleMutabaah() {
     },
 
     // Optimistic update — langsung update UI sebelum server konfirmasi
-    onMutate: async ({ itemId, tanggal, isChecked }) => {
+    onMutate: async ({ itemId, tanggal, isChecked, catatan }) => {
       const queryKey = ['mutabaah', 'today', tanggal]
       await queryClient.cancelQueries({ queryKey })
 
@@ -120,12 +122,12 @@ export function useToggleMutabaah() {
         const updatedItems = old.items.map((item) => {
           // Update parent if matches
           if (item.id === itemId) {
-            return { ...item, is_checked: isChecked }
+            return { ...item, is_checked: isChecked, catatan: catatan ?? item.catatan }
           }
           // Update child if matches
           if (item.children) {
             const updatedChildren = item.children.map(c =>
-              c.id === itemId ? { ...c, is_checked: isChecked } : c
+              c.id === itemId ? { ...c, is_checked: isChecked, catatan: catatan ?? c.catatan } : c
             )
             return { ...item, children: updatedChildren }
           }

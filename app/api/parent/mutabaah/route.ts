@@ -116,25 +116,33 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch items — handle parent_id column missing gracefully
-    let allItems: Array<{ id: string; nama_item: string; urutan: number; parent_id: string | null }> = []
+    let allItems: Array<{ id: string; nama_item: string; urutan: number; parent_id: string | null; tipe: string }> = []
     const { data: itemsData, error: itemsError } = await supabase
       .from('mutabaah_item')
-      .select('id, nama_item, urutan, parent_id')
+      .select('id, nama_item, urutan, parent_id, tipe')
       .eq('tahun_ajaran_id', tahunAjaran.id)
       .eq('is_active', true)
-      .order('urutan', { ascending: true })
+      .order('urutan', { ascending: true }) as any
 
     if (itemsError && itemsError.message?.includes('parent_id')) {
       const { data: fallbackItems } = await supabase
         .from('mutabaah_item')
-        .select('id, nama_item, urutan')
+        .select('id, nama_item, urutan, tipe')
         .eq('tahun_ajaran_id', tahunAjaran.id)
         .eq('is_active', true)
-        .order('urutan', { ascending: true })
-      allItems = (fallbackItems ?? []).map(i => ({ ...i, parent_id: null }))
+        .order('urutan', { ascending: true }) as any
+      allItems = (fallbackItems ?? []).map((i: any) => ({ ...i, parent_id: null }))
+    } else if (itemsError && itemsError.message?.includes('tipe')) {
+      const { data: fallbackItems } = await supabase
+        .from('mutabaah_item')
+        .select('id, nama_item, urutan, parent_id')
+        .eq('tahun_ajaran_id', tahunAjaran.id)
+        .eq('is_active', true)
+        .order('urutan', { ascending: true }) as any
+      allItems = (fallbackItems ?? []).map((i: any) => ({ ...i, tipe: 'checkbox' }))
     } else {
       if (itemsError) throw itemsError
-      allItems = itemsData ?? []
+      allItems = (itemsData as any[]) ?? []
     }
 
     // Filter items by kelas (guru pilih item yang berlaku)
@@ -170,14 +178,14 @@ export async function GET(request: NextRequest) {
     // Ambil log untuk hari ini
     const { data: logs } = await supabase
       .from('mutabaah_log')
-      .select('item_id, is_checked, locked_after')
+      .select('item_id, is_checked, locked_after, catatan')
       .eq('siswa_id', session.siswaId)
-      .eq('tanggal', tanggal)
+      .eq('tanggal', tanggal) as any
 
     const lockedAfter = getLockedAfter(tanggal)
     const isLocked    = new Date() > new Date(lockedAfter)
 
-    const logMap = new Map(logs?.map(l => [l.item_id, l]) ?? [])
+    const logMap = new Map((logs as any[])?.map((l: any) => [l.item_id, l]) ?? [])
 
     const itemsWithStatus = items.map(item => ({
       id:         item.id,
@@ -186,6 +194,8 @@ export async function GET(request: NextRequest) {
       is_checked: logMap.get(item.id)?.is_checked ?? false,
       is_locked:  isLocked,
       parent_id:  item.parent_id,
+      tipe:       item.tipe ?? 'checkbox',
+      catatan:    logMap.get(item.id)?.catatan ?? null,
     }))
 
     // Build hierarchy for percentage — count leaf items only
@@ -230,7 +240,7 @@ export async function POST(request: NextRequest) {
     const supabase = createServiceClient()
     const body     = await request.json()
 
-    const { itemId, tanggal, isChecked } = body
+    const { itemId, tanggal, isChecked, catatan } = body
 
     if (!itemId || !tanggal || typeof isChecked !== 'boolean') {
       return NextResponse.json(
@@ -257,8 +267,9 @@ export async function POST(request: NextRequest) {
           item_id:      itemId,
           tanggal,
           is_checked:   isChecked,
+          catatan:      catatan ?? null,
           locked_after: lockedAfter,
-        },
+        } as any,
         { onConflict: 'siswa_id,item_id,tanggal' }
       )
 

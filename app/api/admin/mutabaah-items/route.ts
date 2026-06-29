@@ -17,15 +17,16 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('mutabaah_item')
-      .select('id, nama_item, parent_id, urutan, is_active, tahun_ajaran_id, tahun_ajaran:tahun_ajaran_id(nama)')
+      .select('id, nama_item, parent_id, urutan, is_active, tahun_ajaran_id, tipe, tahun_ajaran:tahun_ajaran_id(nama)')
       .order('urutan', { ascending: true })
 
     if (tahunId) query = query.eq('tahun_ajaran_id', tahunId)
 
-    const { data, error } = await query
+    const { data: raw, error } = await query as any
     if (error) throw error
 
-    const itemIds = (data ?? []).map(i => i.id)
+    const data: any[] = raw ?? []
+    const itemIds = data.map(i => i.id)
     // Map: itemId → [{ kelas_id, kelas_nama }]
     let kelasMap = new Map<string, { kelas_id: string; kelas_nama: string }[]>()
     if (itemIds.length > 0) {
@@ -87,11 +88,11 @@ export async function DELETE(request: NextRequest) {
 // Helper — insert satu item, return data atau throw
 async function insertMutabaahItem(
   supabase: Awaited<ReturnType<typeof createServerClient>>,
-  payload: { nama_item: string; tahun_ajaran_id: string; parent_id: string | null; urutan: number },
+  payload: { nama_item: string; tahun_ajaran_id: string; parent_id: string | null; urutan: number; tipe?: string },
 ) {
   const { data, error } = await supabase
     .from('mutabaah_item')
-    .insert(payload)
+    .insert({ nama_item: payload.nama_item, tahun_ajaran_id: payload.tahun_ajaran_id, parent_id: payload.parent_id, urutan: payload.urutan, tipe: payload.tipe ?? 'checkbox' } as any)
     .select()
     .single()
   if (error) {
@@ -106,11 +107,12 @@ export async function POST(request: NextRequest) {
     await requireRole(['admin'])
     const supabase = await createServerClient()
     const body     = await request.json()
-    const { namaItem, tahunAjaranId, parentId, subItems } = body as {
+    const { namaItem, tahunAjaranId, parentId, subItems, tipe } = body as {
       namaItem:       string
       tahunAjaranId:  string
       parentId:       string | null
       subItems?:      string[]
+      tipe?:          string
     }
 
     if (!namaItem?.trim() || !tahunAjaranId) {
@@ -172,6 +174,7 @@ export async function POST(request: NextRequest) {
       tahun_ajaran_id: tahunAjaranId,
       parent_id:       parentId || null,
       urutan:          nextUrutan,
+      tipe,
     })
 
     // Insert sub-items if provided (batch — parent_id guaranteed correct)
