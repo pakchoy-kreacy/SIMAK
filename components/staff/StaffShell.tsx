@@ -251,7 +251,7 @@ export function StaffShell({
       {/* ── Main Area ── */}
       <div className="flex-1 md:ml-64 flex flex-col min-h-screen">
         {/* Mobile top bar */}
-        <header className="md:hidden bg-primary-600 dark:bg-neutral-900 text-white sticky top-0 z-40 shadow-md">
+        <header className="md:hidden bg-primary-600 dark:bg-neutral-900 text-white sticky top-0 z-40 shadow-md pt-safe">
           <div className="flex items-center h-14 px-4 gap-3">
             {isSubPage ? (
               <Link

@@ -13,7 +13,7 @@ export default async function GuruWafaPage() {
   if (session.role === 'admin') redirect('/admin')
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col min-h-screen">
       <div className="px-4 py-4 border-b border-neutral-100 bg-white">
         <h2 className="text-lg font-bold text-neutral-800">Progres Wafa</h2>
         <p className="text-xs text-neutral-400 mt-0.5">Pilih siswa untuk input progres</p>

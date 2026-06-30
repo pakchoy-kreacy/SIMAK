@@ -8,7 +8,7 @@ async function getKelasWithSiswa(supabase: any) {
   if (kelasIds.length === 0) return []
   const { data } = await supabase
     .from('kelas')
-    .select('id, nama_kelas, tahun_ajaran_id, wali_kelas_id')
+    .select('id, nama_kelas, tahun_ajaran_id, wali_kelas_id, guru_wafa_id, guru_tahfiz_id')
     .in('id', kelasIds)
     .order('nama_kelas')
   return data ?? []
@@ -60,12 +60,14 @@ export async function POST(request: NextRequest) {
         if (waliKelasId) roleAssignments.push({ userId: waliKelasId, roles: ['wali_kelas'] })
       }
 
-      if (guruWafaId) {
-        roleAssignments.push({ userId: guruWafaId, roles: ['guru_wafa'] })
+      if (guruWafaId !== undefined) {
+        await supabase.from('kelas').update({ guru_wafa_id: guruWafaId || null }).eq('id', kelasId)
+        if (guruWafaId) roleAssignments.push({ userId: guruWafaId, roles: ['guru_wafa'] })
       }
 
-      if (guruTahfizId) {
-        roleAssignments.push({ userId: guruTahfizId, roles: ['guru_tahfiz'] })
+      if (guruTahfizId !== undefined) {
+        await supabase.from('kelas').update({ guru_tahfiz_id: guruTahfizId || null }).eq('id', kelasId)
+        if (guruTahfizId) roleAssignments.push({ userId: guruTahfizId, roles: ['guru_tahfiz'] })
       }
     }
 
@@ -80,9 +82,6 @@ export async function POST(request: NextRequest) {
           )
       }
     }
-
-    // Remove roles from users who no longer have any assignment
-    // (for simplicity, skip this for MVP — manual cleanup via SQL if needed)
 
     const [kelasData, guruRes, tahunAjaranRes] = await Promise.all([
       getKelasWithSiswa(supabase),

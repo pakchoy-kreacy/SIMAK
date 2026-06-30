@@ -13,9 +13,10 @@ interface SurahPickerProps {
   value:    string
   onChange: (surah: string) => void
   error?:   string
+  disabled?: boolean
 }
 
-export function SurahPicker({ value, onChange, error }: SurahPickerProps) {
+export function SurahPicker({ value, onChange, error, disabled }: SurahPickerProps) {
   const [query,  setQuery]  = useState(value)
   const [isOpen, setIsOpen] = useState(false)
   const [results, setResults] = useState(SURAH_LIST)
@@ -57,12 +58,14 @@ export function SurahPicker({ value, onChange, error }: SurahPickerProps) {
           type="text"
           value={query}
           onChange={e => handleInput(e.target.value)}
-          onFocus={() => { setResults(searchSurah(query)); setIsOpen(true) }}
+          onFocus={() => { if (!disabled) { setResults(searchSurah(query)); setIsOpen(true) } }}
           placeholder="Cari nama surah... (contoh: Al-Fatihah)"
+          disabled={disabled}
           className={cn(
             'w-full h-12 px-4 pr-10 border rounded-md text-sm',
             'focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-400',
-            error ? 'border-danger' : 'border-neutral-200'
+            error ? 'border-danger' : 'border-neutral-200',
+            disabled && 'bg-neutral-100 cursor-not-allowed opacity-70'
           )}
         />
         {value && (

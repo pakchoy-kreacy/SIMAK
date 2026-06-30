@@ -37,11 +37,20 @@ export async function GET(request: NextRequest) {
 
     // Non-admin: hanya siswa di kelas sendiri
     if (session.role !== 'admin') {
-      const { data: kelasSaya } = await supabase
+      const kelasQuery = supabase
         .from('kelas')
         .select('id')
-        .eq('wali_kelas_id', session.userId)
         .eq('tahun_ajaran_id', tahunAjaran.id)
+
+      if (session.role === 'guru_wafa') {
+        kelasQuery.eq('guru_wafa_id', session.userId)
+      } else if (session.role === 'guru_tahfiz') {
+        kelasQuery.eq('guru_tahfiz_id', session.userId)
+      } else {
+        kelasQuery.eq('wali_kelas_id', session.userId)
+      }
+
+      const { data: kelasSaya } = await kelasQuery
 
       const kelasIds = kelasSaya?.map(k => k.id) ?? []
       if (kelasIds.length === 0) return NextResponse.json([])

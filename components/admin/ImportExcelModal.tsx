@@ -84,7 +84,7 @@ export function ImportExcelModal({ onClose, onSuccess }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-4 border-b border-neutral-100 sticky top-0 bg-white">
           <h3 className="font-bold text-neutral-800">Import Siswa dari Excel</h3>
@@ -184,7 +184,7 @@ export function ImportExcelModal({ onClose, onSuccess }: Props) {
 
               {/* Errors */}
               {preview.errors.length > 0 && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 max-h-32 overflow-y-auto">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 max-h-32 overflow-y-auto overflow-x-hidden">
                   <p className="text-xs font-semibold text-danger mb-1">Error:</p>
                   {preview.errors.map((e, i) => (
                     <p key={i} className="text-xs text-red-600">• {e}</p>

@@ -200,7 +200,7 @@ export default function AdminStaffPage() {
       {/* Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
             <div className="flex items-center justify-between px-4 py-4 border-b border-neutral-100 sticky top-0 bg-white">
               <h3 className="font-bold text-neutral-800">{editStaff ? 'Edit Akun' : 'Buat Akun Baru'}</h3>
               <button onClick={() => setShowForm(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-neutral-100 text-neutral-500">✕</button>
@@ -225,7 +225,7 @@ export default function AdminStaffPage() {
                 <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Role <span className="text-danger">*</span></label>
                 <select value={formRole} onChange={e => setFormRole(e.target.value)} className="w-full h-11 px-3 border border-neutral-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-300">
                   <option value="admin">Admin - Administrator penuh</option>
-                  <option value="wali_kelas">Wali Kelas, Guru Tahfiz, Guru Wafa</option>
+                  <option value="wali_kelas">Wali Kelas (akses penuh)</option>
                 </select>
               </div>
 

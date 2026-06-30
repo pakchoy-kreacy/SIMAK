@@ -46,6 +46,8 @@ export interface Database {
           tahun_ajaran_id: string
           nama_kelas:      string
           wali_kelas_id:   string | null
+          guru_wafa_id:    string | null
+          guru_tahfiz_id:  string | null
           created_at:      string
           updated_at:      string
         }
@@ -54,6 +56,8 @@ export interface Database {
           tahun_ajaran_id: string
           nama_kelas:      string
           wali_kelas_id?:  string | null
+          guru_wafa_id?:   string | null
+          guru_tahfiz_id?: string | null
           created_at?:     string
           updated_at?:     string
         }
@@ -61,6 +65,8 @@ export interface Database {
           tahun_ajaran_id?: string
           nama_kelas?:      string
           wali_kelas_id?:   string | null
+          guru_wafa_id?:    string | null
+          guru_tahfiz_id?:  string | null
           updated_at?:      string
         }
         Relationships: []

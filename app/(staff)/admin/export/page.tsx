@@ -165,7 +165,7 @@ export default function AdminExportPage() {
         {preview && (
           <div className="bg-primary-50 rounded-xl border border-primary-200 p-4">
             <p className="text-xs font-semibold text-primary-600 mb-2">Ringkasan Export</p>
-            <div className="grid grid-cols-3 gap-3 text-center">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-center">
               <div>
                 <p className="text-lg font-bold text-primary-800">{preview.siswa}</p>
                 <p className="text-[11px] text-primary-500">Siswa</p>
@@ -174,7 +174,7 @@ export default function AdminExportPage() {
                 <p className="text-lg font-bold text-primary-800">{preview.kelas}</p>
                 <p className="text-[11px] text-primary-500">Kelas</p>
               </div>
-              <div>
+              <div className="col-span-2 md:col-span-1">
                 <p className="text-sm font-bold text-primary-800 leading-tight">{formatTanggal(dateFrom)} - {formatTanggal(dateTo)}</p>
                 <p className="text-[11px] text-primary-500">Periode</p>
               </div>

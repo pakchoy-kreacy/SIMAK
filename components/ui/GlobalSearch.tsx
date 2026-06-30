@@ -79,13 +79,13 @@ export function GlobalSearch() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="h-9 px-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-500 text-xs font-semibold rounded-lg flex items-center gap-2 transition-colors"
+        className="h-9 px-3 sm:px-3 px-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-500 text-xs font-semibold rounded-lg flex items-center gap-2 transition-colors"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           <circle cx="11" cy="11" r="8" />
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
-        Cari...
+        <span className="hidden sm:inline">Cari...</span>
         <kbd className="hidden md:inline text-[10px] bg-white px-1.5 py-0.5 rounded border border-neutral-200 font-mono">⌘K</kbd>
       </button>
     )

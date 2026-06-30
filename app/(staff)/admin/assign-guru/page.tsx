@@ -44,7 +44,7 @@ export default function AssignGuruPage() {
     setTahunAjaran(data.tahunAjaran ?? [])
     const init: Record<string, KelasAssignment> = {}
     for (const k of (data.kelas ?? [])) {
-      init[k.id] = { kelasId: k.id, waliKelasId: k.wali_kelas_id ?? '', guruWafaId: '', guruTahfizId: '' }
+      init[k.id] = { kelasId: k.id, waliKelasId: k.wali_kelas_id ?? '', guruWafaId: k.guru_wafa_id ?? '', guruTahfizId: k.guru_tahfiz_id ?? '' }
     }
     setAssign(init)
     setLoading(false)
@@ -80,7 +80,7 @@ export default function AssignGuruPage() {
       showToast('Penugasan guru berhasil disimpan', 'success')
       const init: Record<string, KelasAssignment> = {}
       for (const k of (data.kelas ?? [])) {
-        init[k.id] = { kelasId: k.id, waliKelasId: k.wali_kelas_id ?? '', guruWafaId: '', guruTahfizId: '' }
+        init[k.id] = { kelasId: k.id, waliKelasId: k.wali_kelas_id ?? '', guruWafaId: k.guru_wafa_id ?? '', guruTahfizId: k.guru_tahfiz_id ?? '' }
       }
       setAssign(init)
     } else {

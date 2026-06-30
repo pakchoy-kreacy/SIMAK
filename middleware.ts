@@ -132,7 +132,9 @@ export async function middleware(request: NextRequest) {
           })
         }
       } catch {}
-    } catch {}
+    } catch {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
 
     return response
   }
