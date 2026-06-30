@@ -82,7 +82,13 @@ export default async function DashboardPage() {
         for (const i of items) {
           if (activeSet.has(i.id)) {
             keepIds.add(i.id)
-            if (i.parent_id) keepIds.add(i.parent_id)
+            if (i.parent_id) keepIds.add(i.parent_id)  // child → parent
+          }
+        }
+        // Also include children of any included parent
+        for (const i of items) {
+          if (i.parent_id && keepIds.has(i.parent_id)) {
+            keepIds.add(i.id)
           }
         }
         items = items.filter(i => keepIds.has(i.id))

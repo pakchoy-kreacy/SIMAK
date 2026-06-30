@@ -161,12 +161,17 @@ export async function GET(request: NextRequest) {
 
       if (kelasItems && kelasItems.length > 0) {
         const activeIdSet = new Set(kelasItems.map(k => k.mutabaah_item_id))
-        // Keep active items + their parents
         const activeItemIds = new Set<string>()
         for (const i of allItems) {
           if (activeIdSet.has(i.id)) {
             activeItemIds.add(i.id)
-            if (i.parent_id) activeItemIds.add(i.parent_id)
+            if (i.parent_id) activeItemIds.add(i.parent_id)  // child → parent
+          }
+        }
+        // Also include children of any included parent
+        for (const i of allItems) {
+          if (i.parent_id && activeItemIds.has(i.parent_id)) {
+            activeItemIds.add(i.id)
           }
         }
         allItems = allItems.filter(i => activeItemIds.has(i.id))

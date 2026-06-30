@@ -98,9 +98,33 @@ export async function PATCH(request: NextRequest) {
       kelas_id: kelasId,
     }))
 
+    // Also include children of this item (if it's a parent)
+    const { data: childItems } = await supabase
+      .from('mutabaah_item')
+      .select('id')
+      .eq('parent_id', assignItemId)
+      .eq('is_active', true)
+
+    if (childItems?.length) {
+      for (const child of childItems) {
+        for (const kelasId of kelasIds) {
+          inserts.push({ mutabaah_item_id: child.id, kelas_id: kelasId })
+        }
+      }
+    }
+
+    // Deduplicate
+    const seen = new Set<string>()
+    const deduped = inserts.filter(ins => {
+      const key = `${ins.mutabaah_item_id}:${ins.kelas_id}`
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+
     const { error } = await supabase
       .from('kelas_mutabaah_item')
-      .upsert(inserts, { onConflict: 'mutabaah_item_id,kelas_id' })
+      .upsert(deduped, { onConflict: 'mutabaah_item_id,kelas_id' })
 
     if (error) throw error
 
