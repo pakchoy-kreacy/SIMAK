@@ -64,7 +64,7 @@ export default function RootLayout({
           `
         }} />
       </head>
-      <body className="font-body bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 antialiased">
+      <body className="font-body bg-primary-800 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 antialiased">
         <Providers>{children}</Providers>
       </body>
     </html>

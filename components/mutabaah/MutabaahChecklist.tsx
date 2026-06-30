@@ -8,6 +8,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useToggleMutabaah }  from '@/hooks/useMutabaah'
 import { useOfflineStore }    from '@/stores/offlineStore'
+import { SurahPicker }        from '@/components/tahfiz/SurahPicker'
 import { useToast }           from '@/components/ui/Toast'
 import { cn }                 from '@/lib/utils/cn'
 import type { MutabaahItemWithStatus } from '@/lib/types/app'
@@ -373,20 +374,13 @@ function MutabaahTextItem({
       </p>
 
       <div className="space-y-2">
-        {/* Surah dropdown */}
+        {/* Surah searchable picker */}
         <div>
           <label className="block text-[11px] font-medium text-neutral-500 mb-1">Surat</label>
-          <select
+          <SurahPicker
             value={surah}
-            onChange={e => { setSurah(e.target.value); doSave(e.target.value, ayat) }}
-            disabled={isLocked}
-            className="w-full h-9 px-2 border border-neutral-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 disabled:bg-neutral-100"
-          >
-            <option value="">-- Pilih Surat --</option>
-            {SURAH_LIST.map(s => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
+            onChange={(s) => { setSurah(s); doSave(s, ayat) }}
+          />
         </div>
 
         {/* Ayat input */}

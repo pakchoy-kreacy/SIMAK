@@ -112,7 +112,7 @@ export function StaffShell({
           const cookie = document.cookie.split('; ').find(r => r.startsWith(SESSION_COOKIE + '='))
           if (cookie) {
             const value = cookie.substring(SESSION_COOKIE.length + 1)
-            const parsed = JSON.parse(decodeURIComponent(value))
+            const parsed = JSON.parse(value)
             if (parsed.userId && parsed.role && typeof parsed.nama === 'string' && parsed.nama.trim()) {
               const sess = { nama: parsed.nama, role: parsed.role as StaffRole, userId: parsed.userId, email: parsed.email ?? '', roles: (parsed.roles ?? [parsed.role]) as StaffRole[] }
               setSess(sess)
@@ -234,7 +234,7 @@ export function StaffShell({
             className="absolute inset-0 bg-black/40 transition-opacity"
             onClick={() => setSidebarOpen(false)}
           />
-          <aside className="absolute inset-y-0 left-0 w-72 bg-primary-800 dark:bg-neutral-950 text-white shadow-2xl transition-transform duration-200 ease-out animate-in slide-in-from-left">
+          <aside className="absolute inset-y-0 left-0 w-72 bg-primary-800 dark:bg-neutral-950 text-white shadow-2xl overflow-hidden sidebar-slide-in pt-safe pb-safe">
             <SidebarContent
               nama={nama}
               role={role}
@@ -340,7 +340,7 @@ function SidebarContent({
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-display font-bold text-lg leading-tight">SIMAK</p>
-          <p className="text-primary-300 dark:text-neutral-400 text-[10px] leading-tight">SDIT Al-Kautsar Muko-Muko</p>
+          <p className="text-primary-300 dark:text-neutral-400 text-[11px] leading-tight">SDIT Al-Kautsar Muko-Muko</p>
         </div>
         {onClose && (
           <button
@@ -401,7 +401,7 @@ function SidebarContent({
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-primary-700/50 dark:border-neutral-800 px-4 py-1.5 flex-shrink-0">
+      <div className="border-t border-primary-700/50 dark:border-neutral-800 px-4 py-2.5 flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0">
             <span className="text-white font-bold text-sm">{nama.charAt(0)}</span>

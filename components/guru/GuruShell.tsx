@@ -65,7 +65,7 @@ export function GuruShell({
           const cookie = document.cookie.split('; ').find(r => r.startsWith(SESSION_COOKIE + '='))
           if (cookie) {
             const value = cookie.substring(SESSION_COOKIE.length + 1)
-            const parsed = JSON.parse(decodeURIComponent(value))
+            const parsed = JSON.parse(value)
             if (parsed.userId && parsed.role && typeof parsed.nama === 'string' && parsed.nama.trim()) {
               const sess = { nama: parsed.nama, role: parsed.role, userId: parsed.userId, email: parsed.email ?? '', roles: parsed.roles ?? [parsed.role] }
               setSess(sess)
@@ -179,7 +179,7 @@ export function GuruShell({
             className="absolute inset-0 bg-black/40 transition-opacity"
             onClick={() => setSidebarOpen(false)}
           />
-          <aside className="absolute inset-y-0 left-0 w-72 bg-primary-800 dark:bg-neutral-950 text-white shadow-2xl transition-transform animate-in slide-in-from-left">
+          <aside className="absolute inset-y-0 left-0 w-72 bg-primary-800 dark:bg-neutral-950 text-white shadow-2xl overflow-hidden sidebar-slide-in pt-safe pb-safe">
             <SidebarContent
               nama={nama}
               role={role}
@@ -286,8 +286,19 @@ function SidebarContent({
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-display font-bold text-xl leading-tight">SIMAK</p>
-          <p className="text-primary-300 dark:text-neutral-400 text-[10px] leading-tight">SDIT Al-Kautsar Muko-Muko</p>
+          <p className="text-primary-300 dark:text-neutral-400 text-[11px] leading-tight">SDIT Al-Kautsar Muko-Muko</p>
         </div>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-primary-700 dark:hover:bg-neutral-800 transition-colors"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* Navigation */}

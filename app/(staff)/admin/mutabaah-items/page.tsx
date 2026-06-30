@@ -53,6 +53,7 @@ export default function AdminMutabaahItemsPage() {
   // Form state
   const [formNama,   setFormNama]   = useState('')
   const [formTipe,   setFormTipe]   = useState('checkbox')
+  const [formSubTipe, setFormSubTipe] = useState('checkbox')
   const [subItems,   setSubItems]   = useState<string[]>([''])
   const [formLoad,   setFormLoad]   = useState(false)
   const [confirmDel, setConfirmDel] = useState<string | null>(null)
@@ -136,6 +137,7 @@ export default function AdminMutabaahItemsPage() {
 
   function openSubForm(parentId: string, parentNama: string) {
     setFormNama('')
+    setFormSubTipe('checkbox')
     setSubParentId(parentId)
     setSubParentNama(parentNama)
     setShowSubForm(true)
@@ -156,7 +158,7 @@ export default function AdminMutabaahItemsPage() {
     if (editItem) {
       const res = await fetch(`/api/admin/mutabaah-items/${editItem.id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ namaItem: formNama }),
+        body: JSON.stringify({ namaItem: formNama, tipe: formTipe }),
       })
       if (res.ok) { showToast('Item diperbarui', 'success'); setShowMainForm(false); queryClient.invalidateQueries({ queryKey: ['mutabaah-items'], exact: false }) }
       else { const d = await res.json(); showToast(d.error ?? 'Gagal', 'error') }
@@ -196,7 +198,7 @@ export default function AdminMutabaahItemsPage() {
     if (!formNama.trim() || !selectedTahun) return
     setFormLoad(true)
 
-    const payload = { namaItem: formNama, tahunAjaranId: selectedTahun, parentId: subParentId || null }
+    const payload = { namaItem: formNama, tahunAjaranId: selectedTahun, parentId: subParentId || null, tipe: formSubTipe }
 
     const res = await fetch('/api/admin/mutabaah-items', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -596,16 +598,14 @@ export default function AdminMutabaahItemsPage() {
                 />
               </div>
 
-              {!editItem && (
-                <div>
-                  <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Tipe Item</label>
-                  <select value={formTipe} onChange={e => setFormTipe(e.target.value)} className="w-full h-11 px-3 border border-neutral-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-300">
-                    <option value="checkbox">Centang (Checkbox)</option>
-                    <option value="text">Input Teks (Orang tua isi surat & ayat)</option>
-                  </select>
-                  <p className="text-[11px] text-neutral-400 mt-1">Tipe "Input Teks" hanya untuk sub item</p>
-                </div>
-              )}
+              <div>
+                <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Tipe Item</label>
+                <select value={formTipe} onChange={e => setFormTipe(e.target.value)} className="w-full h-11 px-3 border border-neutral-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-300">
+                  <option value="checkbox">Centang (Checkbox)</option>
+                  <option value="text">Input Teks (Orang tua isi surat & ayat)</option>
+                </select>
+                <p className="text-[11px] text-neutral-400 mt-1">Tipe "Input Teks" hanya untuk sub item</p>
+              </div>
 
               {/* Sub items opsional — hanya untuk item baru */}
               {!editItem && (
@@ -686,6 +686,13 @@ export default function AdminMutabaahItemsPage() {
                 <p className="text-[11px] text-neutral-400 mt-1.5">
                   Sub item akan muncul sebagai checklist yang diisi orang tua.
                 </p>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Tipe Item</label>
+                <select value={formSubTipe} onChange={e => setFormSubTipe(e.target.value)} className="w-full h-11 px-3 border border-neutral-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-300">
+                  <option value="checkbox">Centang (Checkbox)</option>
+                  <option value="text">Input Teks (Surat &amp; Ayat)</option>
+                </select>
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowSubForm(false)} className="flex-1 h-11 border border-neutral-200 rounded-lg text-sm font-semibold text-neutral-600">Batal</button>
