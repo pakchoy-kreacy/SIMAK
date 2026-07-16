@@ -64,8 +64,7 @@ export function GuruShell({
         if (typeof document !== 'undefined') {
           const cookie = document.cookie.split('; ').find(r => r.startsWith(SESSION_COOKIE + '='))
           if (cookie) {
-            const value = cookie.substring(SESSION_COOKIE.length + 1)
-            const parsed = JSON.parse(value)
+            const parsed = JSON.parse(decodeURIComponent(cookie.substring(SESSION_COOKIE.length + 1)))
             if (parsed.userId && parsed.role && typeof parsed.nama === 'string' && parsed.nama.trim()) {
               const sess = { nama: parsed.nama, role: parsed.role, userId: parsed.userId, email: parsed.email ?? '', roles: parsed.roles ?? [parsed.role] }
               setSess(sess)

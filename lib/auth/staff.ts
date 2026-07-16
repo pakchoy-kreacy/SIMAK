@@ -84,7 +84,7 @@ export async function getStaffSession(): Promise<StaffSessionData | null> {
         secure:   process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         path:     '/',
-        maxAge:   3600,
+        maxAge:   86400,
       })
     } catch {}
 
