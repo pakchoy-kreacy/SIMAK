@@ -20,8 +20,14 @@ export function LoginForm() {
   const [isPending, startTransition] = useTransition()
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
   const [canInstall, setCanInstall] = useState(false)
+  const [isStandalone, setIsStandalone] = useState(false)
 
   useEffect(() => {
+    setIsStandalone(
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true
+    )
+
     function handler(e: Event) {
       e.preventDefault()
       setDeferredPrompt(e)
@@ -289,21 +295,20 @@ export function LoginForm() {
           Hubungi Admin via WhatsApp
         </a>
 
-        {/* Install PWA button */}
-        {canInstall && (
-          <button
-            onClick={handleInstall}
-            className="mt-3 flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white text-sm font-medium px-5 py-2.5 rounded-full transition-all animate-in"
-            style={{ animationDelay: '0.2s' }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            Install Aplikasi
-          </button>
-        )}
+        {/* Install PWA button — always visible */}
+        <button
+          onClick={canInstall && deferredPrompt ? handleInstall : undefined}
+          className="mt-3 flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white text-sm font-medium px-5 py-2.5 rounded-full transition-all animate-in disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ animationDelay: '0.2s' }}
+          disabled={isStandalone || (!canInstall && !isStandalone)}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          {isStandalone ? 'Aplikasi Terinstall' : canInstall ? 'Install Aplikasi' : 'Install Aplikasi'}
+        </button>
       </div>
 
       {/* Footer */}
